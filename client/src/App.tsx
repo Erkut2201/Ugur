@@ -42,112 +42,94 @@ function PrivateRoute({
   return <Layout>{children}</Layout>;
 }
 
-function InternalApp() {
-  return (
-    <Switch>
-      <Route path="/login" component={LoginPage} />
-      <Route path="/">
-        <Redirect to="/dashboard" />
-      </Route>
-      <Route path="/dashboard">
-        <PrivateRoute>
-          <DashboardPage />
-        </PrivateRoute>
-      </Route>
-      <Route path="/admin">
-        <PrivateRoute>
-          <DashboardPage />
-        </PrivateRoute>
-      </Route>
-      <Route path="/inquiries">
-        <PrivateRoute>
-          <InquiriesPage />
-        </PrivateRoute>
-      </Route>
-      <Route path="/customers">
-        <PrivateRoute>
-          <CustomersPage />
-        </PrivateRoute>
-      </Route>
-      <Route path="/quotes">
-        <PrivateRoute>
-          <QuotesPage />
-        </PrivateRoute>
-      </Route>
-      <Route path="/invoices">
-        <PrivateRoute>
-          <InvoicesPage />
-        </PrivateRoute>
-      </Route>
-      <Route path="/protocols">
-        <PrivateRoute>
-          <ProtocolsPage />
-        </PrivateRoute>
-      </Route>
-      <Route path="/documents">
-        <PrivateRoute>
-          <DocumentsPage />
-        </PrivateRoute>
-      </Route>
-      <Route path="/services">
-        <PrivateRoute>
-          <ServicesPage />
-        </PrivateRoute>
-      </Route>
-      <Route>
-        <Redirect to="/dashboard" />
-      </Route>
-    </Switch>
-  );
-}
-
-function PublicApp() {
-  return (
-    <Switch>
-      <Route path="/" component={HomePage} />
-      <Route path="/produkte" component={ProductsOverviewPage} />
-      {productPages.map((product) => (
-        <Route key={product.slug} path={`/${product.slug}`}>
-          <ProductPage product={product} />
-        </Route>
-      ))}
-      <Route path="/unternehmen">
-        <InfoPage page={companyPage} />
-      </Route>
-      <Route path="/kontakt" component={ContactPage} />
-      <Route path="/angebot-anfragen" component={OfferPage} />
-      <Route path="/aktionen">
-        <SimplePage eyebrow={actionsPage.eyebrow} title={actionsPage.title} description={actionsPage.description} />
-      </Route>
-      <Route path="/galerie">
-        <SimplePage eyebrow={galleryPage.eyebrow} title={galleryPage.title} description={galleryPage.description} />
-      </Route>
-      <Route path="/karriere" component={KarrierePage} />
-      <Route path="/impressum">
-        <InfoPage page={imprintPage} />
-      </Route>
-      <Route path="/datenschutz">
-        <InfoPage page={privacyPage} />
-      </Route>
-      <Route path="/agb">
-        <InfoPage page={termsPage} />
-      </Route>
-      <Route>
-        <Redirect to="/" />
-      </Route>
-    </Switch>
-  );
-}
 
 export default function App() {
-  const host = typeof window !== "undefined" ? window.location.hostname : "localhost";
-  const isInternalHost = host.startsWith("rechnungen.") || host.includes("b2b");
-
-  if (isInternalHost) return <InternalApp />;
-
   return (
     <CookieConsentProvider>
-      <PublicApp />
+      <Switch>
+        {/* ── Interne Routen (B2B-Portal) ── */}
+        <Route path="/login" component={LoginPage} />
+        <Route path="/dashboard">
+          <PrivateRoute>
+            <DashboardPage />
+          </PrivateRoute>
+        </Route>
+        <Route path="/admin">
+          <PrivateRoute>
+            <DashboardPage />
+          </PrivateRoute>
+        </Route>
+        <Route path="/inquiries">
+          <PrivateRoute>
+            <InquiriesPage />
+          </PrivateRoute>
+        </Route>
+        <Route path="/customers">
+          <PrivateRoute>
+            <CustomersPage />
+          </PrivateRoute>
+        </Route>
+        <Route path="/quotes">
+          <PrivateRoute>
+            <QuotesPage />
+          </PrivateRoute>
+        </Route>
+        <Route path="/invoices">
+          <PrivateRoute>
+            <InvoicesPage />
+          </PrivateRoute>
+        </Route>
+        <Route path="/protocols">
+          <PrivateRoute>
+            <ProtocolsPage />
+          </PrivateRoute>
+        </Route>
+        <Route path="/documents">
+          <PrivateRoute>
+            <DocumentsPage />
+          </PrivateRoute>
+        </Route>
+        <Route path="/services">
+          <PrivateRoute>
+            <ServicesPage />
+          </PrivateRoute>
+        </Route>
+
+        {/* ── Öffentliche Routen (Website) ── */}
+        <Route path="/" component={HomePage} />
+        <Route path="/produkte" component={ProductsOverviewPage} />
+        {productPages.map((product) => (
+          <Route key={product.slug} path={`/${product.slug}`}>
+            <ProductPage product={product} />
+          </Route>
+        ))}
+        <Route path="/unternehmen">
+          <InfoPage page={companyPage} />
+        </Route>
+        <Route path="/kontakt" component={ContactPage} />
+        <Route path="/angebot-anfragen" component={OfferPage} />
+        <Route path="/aktionen">
+          <SimplePage eyebrow={actionsPage.eyebrow} title={actionsPage.title} description={actionsPage.description} />
+        </Route>
+        <Route path="/galerie">
+          <SimplePage eyebrow={galleryPage.eyebrow} title={galleryPage.title} description={galleryPage.description} />
+        </Route>
+        <Route path="/karriere" component={KarrierePage} />
+        <Route path="/impressum">
+          <InfoPage page={imprintPage} />
+        </Route>
+        <Route path="/datenschutz">
+          <InfoPage page={privacyPage} />
+        </Route>
+        <Route path="/agb">
+          <InfoPage page={termsPage} />
+        </Route>
+
+        {/* Fallback */}
+        <Route>
+          <Redirect to="/" />
+        </Route>
+      </Switch>
       <CookieConsentBanner />
     </CookieConsentProvider>
   );
