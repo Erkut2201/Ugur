@@ -1,0 +1,97 @@
+services:
+  - type: web
+    name: konzept-terrasse
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm install && npm run db:push && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+
+      # ── Firmendaten ────────────────────────────────────────────────────────
+      - key: COMPANY_NAME
+        sync: false
+      - key: COMPANY_STREET
+        sync: false
+      - key: COMPANY_ZIP
+        sync: false
+      - key: COMPANY_CITY
+        sync: false
+      - key: COMPANY_PHONE
+        sync: false
+      - key: COMPANY_EMAIL
+        sync: false
+      - key: COMPANY_WEBSITE
+        sync: false
+
+      # ── Bankverbindung ─────────────────────────────────────────────────────
+      - key: COMPANY_BANK_NAME
+        sync: false
+      - key: COMPANY_IBAN
+        sync: false
+      - key: COMPANY_BIC
+        sync: false
+
+      # ── Steuer ────────────────────────────────────────────────────────────
+      - key: COMPANY_TAX_ID
+        sync: false
+      - key: COMPANY_VAT_ID
+        sync: false
+      - key: DEFAULT_VAT_RATE
+        value: "19"
+
+      # ── Dokumenten-Nummernpräfixe ─────────────────────────────────────────
+      - key: QUOTE_PREFIX
+        value: ANG
+      - key: INVOICE_PREFIX
+        value: RNG
+      - key: PROTOCOL_PREFIX
+        value: ABN
+
+      # ── Admin-Account ──────────────────────────────────────────────────────
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+
+      # ── Session ───────────────────────────────────────────────────────────
+      - key: SESSION_SECRET
+        generateValue: true
+
+      # ── PostgreSQL (Neon) ──────────────────────────────────────────────────
+      - key: POSTGRES_URL
+        sync: false
+
+      # ── SQLite-Fallback (inaktiv wenn PG_HOST gesetzt) ────────────────────
+      - key: SQLITE_PATH
+        value: ./data/local.db
+
+      # ── E-Mail (Brevo) ─────────────────────────────────────────────────────
+      - key: BREVO_API_KEY
+        sync: false
+      - key: BREVO_FROM
+        sync: false
+
+      # ── S3 Object Storage (optional) ──────────────────────────────────────
+      - key: S3_BUCKET
+        sync: false
+      - key: S3_REGION
+        value: eu-central-1
+      - key: S3_ENDPOINT
+        sync: false
+      - key: S3_ACCESS_KEY
+        sync: false
+      - key: S3_SECRET_KEY
+        sync: false
+
+      # ── PDF-Bilder ─────────────────────────────────────────────────────────
+      - key: COMPANY_HEADER_IMAGE
+        value: attachments/header.jpg
+
+      # ── Lokaler Dateispeicher ──────────────────────────────────────────────
+      - key: LOCAL_STORAGE_PATH
+        value: ./data/pdfs
