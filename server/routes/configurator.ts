@@ -32,6 +32,11 @@ const prodTbl = () => USE_POSTGRES ? configuratorProductsTable : configuratorPro
 const priceTbl = () => USE_POSTGRES ? configuratorPricesTable : configuratorPricesTableSQLite;
 const accTbl = () => USE_POSTGRES ? configuratorAccessoriesTable : configuratorAccessoriesTableSQLite;
 
+function getBilledQuantity(quantity: number, unit: string) {
+  const normalizedUnit = unit.trim().toLowerCase();
+  return normalizedUnit === "m" ? Math.ceil(quantity) : quantity;
+}
+
 // ── GET /api/configurator/products?manufacturerId=X ─────────────────────────
 // Alle Produkte eines Herstellers mit ihren verfügbaren Breiten und Tiefen
 router.get("/products", async (req, res) => {
@@ -161,7 +166,9 @@ router.post("/calculate", async (req, res) => {
           .where(eq((accTbl() as any).id, Number(id)))
           .limit(1);
         if (rows[0]) {
-          const lineTotal = Number(rows[0].priceNet) * Number(quantity);
+          const exactQuantity = Number(quantity);
+          const billedQuantity = getBilledQuantity(exactQuantity, String(rows[0].unit ?? ""));
+          const lineTotal = Number(rows[0].priceNet) * billedQuantity;
           accessoryTotal += lineTotal;
           accessoryLines.push({
             id: rows[0].id,
@@ -169,7 +176,7 @@ router.post("/calculate", async (req, res) => {
             category: rows[0].category,
             unit: rows[0].unit,
             priceNet: Number(rows[0].priceNet),
-            quantity: Number(quantity),
+            quantity: exactQuantity,
             total: lineTotal,
           });
         }

@@ -631,7 +631,7 @@ export default function ConfiguratorWizard({ onAccept, onClose }: Props) {
                 <span className="ml-2 text-xs font-normal text-gray-400">EK → VK +{markup.toLocaleString("de-DE", { maximumFractionDigits: 1 })}%</span>
               )}
             </p>
-            <div className="space-y-0.5 text-sm">
+            <div className="space-y-0.5 text-sm text-gray-700">
               {(() => {
                 const basVk = applyMarkup(calcResult.basePrice);
                 const sqm = Math.round(calcResult.chosenWidth * calcResult.chosenDepth * 100) / 100;
@@ -642,18 +642,18 @@ export default function ConfiguratorWizard({ onAccept, onClose }: Props) {
                   <>
                     <div className="flex justify-between">
                       <span className="text-gray-600">{selectedProduct?.name} {calcResult.chosenWidth}m × {calcResult.chosenDepth}m</span>
-                      <span className="font-medium">{basVk.toLocaleString("de-DE", { minimumFractionDigits: 2 })} €</span>
+                      <span className="font-medium text-gray-900">{basVk.toLocaleString("de-DE", { minimumFractionDigits: 2 })} €</span>
                     </div>
                     {selectedVariant && (
                       <div className="flex justify-between">
                         <span className="text-gray-600">Verglasung: {selectedVariant.name} ({sqm} {selectedVariant.unit || "m²"})</span>
-                        <span className="font-medium">{glasVk.toLocaleString("de-DE", { minimumFractionDigits: 2 })} €</span>
+                        <span className="font-medium text-gray-900">{glasVk.toLocaleString("de-DE", { minimumFractionDigits: 2 })} €</span>
                       </div>
                     )}
                     {calcResult.accessoryLines.map((a) => (
                       <div key={a.id} className="flex justify-between text-gray-500">
                         <span>{a.name} ({a.quantity} {a.unit})</span>
-                        <span>{applyMarkup(a.total).toLocaleString("de-DE", { minimumFractionDigits: 2 })} €</span>
+                        <span className="text-gray-700">{applyMarkup(a.total).toLocaleString("de-DE", { minimumFractionDigits: 2 })} €</span>
                       </div>
                     ))}
                     <div className="flex justify-between font-semibold border-t border-gray-200 pt-1 mt-0.5 text-brand-gold">

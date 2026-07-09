@@ -68,6 +68,15 @@ function emptyItem(pos: number): LineItem {
   };
 }
 
+function getBilledQuantity(quantity: number, unit: string) {
+  const normalizedUnit = unit.trim().toLowerCase();
+  return normalizedUnit === "m" ? Math.ceil(quantity) : quantity;
+}
+
+function calculateLineTotal(quantity: number, unitPrice: number, unit: string) {
+  return Math.round(getBilledQuantity(quantity, unit) * unitPrice * 100) / 100;
+}
+
 export default function DocumentForm({
   initial,
   docType,
@@ -196,7 +205,7 @@ export default function DocumentForm({
     setItems((prev) => {
       const next = [...prev];
       const item = { ...next[index], ...patch };
-      item.total = Math.round(item.quantity * item.unitPrice * 100) / 100;
+      item.total = calculateLineTotal(item.quantity, item.unitPrice, item.unit);
       next[index] = item;
       return next;
     });
@@ -223,6 +232,16 @@ export default function DocumentForm({
     return formatImportedLines(heading, name, prefix, description) || name;
   }
 
+  const sixWallSunProtectionInfoText = `Sonnenschutzplatten 16 mm (Sechsfachstegplatte)
+
+Sechsfach-Stegplatte (Mehrkammer-Polycarbonat) mit zusätzlicher Sonnenschutzbeschichtung, Stärke 16 mm.
+
+Reduziert die Wärmeeinstrahlung und Aufheizung unter der Überdachung deutlich stärker als eine Standard-Stegplatte.
+
+Erhältlich in klar oder opal, als Aufpreis-Option zur Standard-16-mm-Stegplatte.
+
+Bruchsicher, UV-beständig und langlebig, passend zu allen Terrassenüberdachungen mit Stegplatten-Eindeckung.`;
+
   function getCatalogCategoryLabel(categoryId: number | null | undefined) {
     if (!categoryId) return "";
 
@@ -241,7 +260,7 @@ export default function DocumentForm({
         productInfoText: null,
         unit: s.unit,
         unitPrice: price,
-        total: Math.round(items[catalogTargetRow].quantity * price * 100) / 100,
+        total: calculateLineTotal(items[catalogTargetRow].quantity, price, s.unit),
       });
     } else {
       setItems((prev) => [
@@ -255,7 +274,7 @@ export default function DocumentForm({
           quantity: 1,
           unit: s.unit,
           unitPrice: price,
-          total: Math.round(price * 100) / 100,
+          total: calculateLineTotal(1, price, s.unit),
         },
       ]);
     }
@@ -278,7 +297,7 @@ export default function DocumentForm({
         quantity: l.quantity,
         unit: l.unit,
         unitPrice: l.unitPrice,
-        total: Math.round(l.quantity * l.unitPrice * 100) / 100,
+        total: calculateLineTotal(l.quantity, l.unitPrice, l.unit),
       }));
       return [...base, ...newLines].map((it, i) => ({ ...it, position: i + 1 }));
     });
@@ -300,8 +319,14 @@ export default function DocumentForm({
       categoryLabel || null,
     );
     const manufacturer = mfr?.name ?? "";
-    const infoTitle = categoryLabel || item.name;
-    const infoText = cat?.productInfoText ? String(cat.productInfoText).trim() : null;
+    const normalizedName = String(item.name ?? "").trim().toLowerCase();
+    const isSixWallSunProtection = normalizedName === "sonnenschutzplatte opal" || normalizedName === "sonnenschutzplatte klar";
+    const infoTitle = isSixWallSunProtection ? item.name : categoryLabel || item.name;
+    const infoText = isSixWallSunProtection
+      ? sixWallSunProtectionInfoText
+      : cat?.productInfoText
+        ? String(cat.productInfoText).trim()
+        : null;
     if (productCatalogTargetRow !== null) {
       updateItem(productCatalogTargetRow, {
         description: label,
@@ -311,7 +336,7 @@ export default function DocumentForm({
         productInfoText: infoText,
         unit: item.unit,
         unitPrice: price,
-        total: Math.round(items[productCatalogTargetRow].quantity * price * 100) / 100,
+        total: calculateLineTotal(items[productCatalogTargetRow].quantity, price, item.unit),
       });
     } else {
       setItems((prev) => [
@@ -326,7 +351,7 @@ export default function DocumentForm({
           quantity: 1,
           unit: item.unit,
           unitPrice: price,
-          total: Math.round(price * 100) / 100,
+          total: calculateLineTotal(1, price, item.unit),
         },
       ]);
     }
