@@ -750,6 +750,14 @@ function getItemTableParts(doc: jsPDF, item: any, textMaxWidth: number) {
   const manufacturer = String(item.manufacturer ?? "").trim();
   const manufacturerLabel = manufacturer ? `AC-${manufacturer}` : "";
   const productInfoText = String(item.productInfoText ?? "").trim();
+  const productDescription = String(item.productDescription ?? "").trim();
+  const productDescLines = productDescription
+    ? productDescription
+        .split(/\r?\n/)
+        .map((l) => l.trim())
+        .filter(Boolean)
+        .flatMap((l) => doc.splitTextToSize(l, textMaxWidth) as string[])
+    : [];
   const productInfoParagraphs = productInfoText
     ? productInfoText
         .split(/\r?\n\s*\r?\n/)
@@ -769,6 +777,7 @@ function getItemTableParts(doc: jsPDF, item: any, textMaxWidth: number) {
   return {
     total,
     manufacturerLabel,
+    productDescLines,
     productInfoParagraphs,
     wrappedTitle: doc.splitTextToSize(title, textMaxWidth) as string[],
     wrappedDetails: detailLines.map((detailLine) => doc.splitTextToSize(detailLine.replace(/^[•\-\*]\s*/, ""), textMaxWidth) as string[]),
@@ -779,6 +788,7 @@ function getItemTableParts(doc: jsPDF, item: any, textMaxWidth: number) {
 function getItemRowHeight(parts: ReturnType<typeof getItemTableParts>, tableLayout: TableLayout): number {
   let rowHeight = parts.wrappedTitle.length * tableLayout.titleLineHeight + tableLayout.titleAfterGap;
   if (parts.manufacturerLabel) rowHeight += tableLayout.manufacturerHeight;
+  if (parts.productDescLines.length > 0) rowHeight += parts.productDescLines.length * tableLayout.detailLineHeight + tableLayout.detailAfterGap;
   rowHeight += parts.productInfoParagraphs.reduce((sum, paragraphLines, paragraphIndex) => {
     const paragraphHeight = paragraphLines.length * tableLayout.infoLineHeight;
     const paragraphGap = paragraphIndex < parts.productInfoParagraphs.length - 1 ? tableLayout.infoParagraphGap : 0;
@@ -875,6 +885,14 @@ async function addItemsTable(
       doc.setTextColor(...COLOR_GRAY);
       doc.text(parts.manufacturerLabel, contentX, y + 2.1);
       y += tableLayout.manufacturerHeight;
+    }
+
+    if (parts.productDescLines.length > 0) {
+      doc.setFont(PDF_FONT, "italic");
+      doc.setFontSize(tableLayout.detailFontSize);
+      doc.setTextColor(...COLOR_GRAY);
+      doc.text(parts.productDescLines, contentX, y + tableLayout.detailLineHeight - 0.4);
+      y += parts.productDescLines.length * tableLayout.detailLineHeight + tableLayout.detailAfterGap;
     }
 
     if (parts.productInfoParagraphs.length > 0) {

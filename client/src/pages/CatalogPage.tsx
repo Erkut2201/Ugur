@@ -32,6 +32,7 @@ interface CatalogItem {
   articleNumber?: string;
   name: string;
   description?: string;
+  productDescription?: string;
   unit: string;
   unitPrice: number;
   notes?: string;
@@ -70,6 +71,7 @@ const emptyItem = (categoryId: number): Omit<CatalogItem, "id"> => ({
   articleNumber: "",
   name: "",
   description: "",
+  productDescription: "",
   unit: "Stk",
   unitPrice: 0,
   notes: "",
@@ -304,6 +306,7 @@ export default function CatalogPage() {
       articleNumber: item.articleNumber ?? "",
       name: item.name,
       description: item.description ?? "",
+      productDescription: item.productDescription ?? "",
       unit: item.unit,
       unitPrice: Number(item.unitPrice),
       notes: item.notes ?? "",
@@ -1065,6 +1068,16 @@ export default function CatalogPage() {
                 value={itemForm.description ?? ""}
                 onChange={(e) => setItemForm((f) => ({ ...f, description: e.target.value }))}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Produktbeschreibung (PDF)</label>
+              <textarea
+                rows={4}
+                value={itemForm.productDescription ?? ""}
+                onChange={(e) => setItemForm((f) => ({ ...f, productDescription: e.target.value }))}
+                placeholder="Individuelle Beschreibung für Angebote und Rechnungen…"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold resize-y"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">

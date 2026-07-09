@@ -107,6 +107,7 @@ const tableConfigs = [
       product_category_id: null,
       product_info_title: null,
       product_info_text: null,
+      product_description: null,
     }),
     filter: (row, context) => context.quoteIds.has(row.quote_id),
     targetColumns: [
@@ -118,6 +119,7 @@ const tableConfigs = [
       "product_category_id",
       "product_info_title",
       "product_info_text",
+      "product_description",
       "quantity",
       "unit",
       "unit_price",
@@ -195,6 +197,7 @@ const tableConfigs = [
       product_category_id: null,
       product_info_title: null,
       product_info_text: null,
+      product_description: null,
     }),
     targetColumns: [
       "id",
@@ -205,6 +208,7 @@ const tableConfigs = [
       "product_category_id",
       "product_info_title",
       "product_info_text",
+      "product_description",
       "quantity",
       "unit",
       "unit_price",

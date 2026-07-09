@@ -18,6 +18,7 @@ export interface LineItem {
   productCategoryId?: number | null;
   productInfoTitle?: string | null;
   productInfoText?: string | null;
+  productDescription?: string | null;
   quantity: number;
   unit: string;
   unitPrice: number;
@@ -61,6 +62,7 @@ function emptyItem(pos: number): LineItem {
     productCategoryId: null,
     productInfoTitle: null,
     productInfoText: null,
+    productDescription: null,
     quantity: 1,
     unit: "Stk",
     unitPrice: 0,
@@ -113,6 +115,7 @@ export default function DocumentForm({
           productCategoryId: it.productCategoryId ?? null,
           productInfoTitle: it.productInfoTitle ?? null,
           productInfoText: it.productInfoText ?? null,
+          productDescription: it.productDescription ?? null,
           quantity: Number(it.quantity),
           unitPrice: Number(it.unitPrice),
           total: Number(it.total),
@@ -294,6 +297,7 @@ Bruchsicher, UV-beständig und langlebig, passend zu allen Terrassenüberdachung
         productCategoryId: l.productCategoryId ?? null,
         productInfoTitle: l.productInfoTitle ?? null,
         productInfoText: l.productInfoText ?? null,
+        productDescription: (l as any).productDescription ?? null,
         quantity: l.quantity,
         unit: l.unit,
         unitPrice: l.unitPrice,
@@ -334,6 +338,7 @@ Bruchsicher, UV-beständig und langlebig, passend zu allen Terrassenüberdachung
         productCategoryId: cat?.id ?? null,
         productInfoTitle: infoText ? infoTitle : null,
         productInfoText: infoText,
+        productDescription: item.productDescription ?? null,
         unit: item.unit,
         unitPrice: price,
         total: calculateLineTotal(items[productCatalogTargetRow].quantity, price, item.unit),
@@ -348,6 +353,7 @@ Bruchsicher, UV-beständig und langlebig, passend zu allen Terrassenüberdachung
           productCategoryId: cat?.id ?? null,
           productInfoTitle: infoText ? infoTitle : null,
           productInfoText: infoText,
+          productDescription: item.productDescription ?? null,
           quantity: 1,
           unit: item.unit,
           unitPrice: price,
@@ -622,6 +628,15 @@ Bruchsicher, UV-beständig und langlebig, passend zu allen Terrassenüberdachung
                           onChange={(e) => updateItem(i, { description: e.target.value })}
                           placeholder="Leistungsbeschreibung..."
                         />
+                        {item.productDescription !== undefined && (
+                          <textarea
+                            rows={Math.max(1, String(item.productDescription ?? "").split(/\r?\n/).length)}
+                            className="w-full resize-y border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-brand-gold rounded px-1 py-0.5 text-xs text-gray-500 italic leading-4"
+                            value={item.productDescription ?? ""}
+                            onChange={(e) => updateItem(i, { productDescription: e.target.value || null })}
+                            placeholder="Produktbeschreibung für PDF (optional)..."
+                          />
+                        )}
                       </div>
                       <button
                         type="button"
@@ -699,6 +714,13 @@ Bruchsicher, UV-beständig und langlebig, passend zu allen Terrassenüberdachung
                   value={item.description}
                   onChange={(e) => updateItem(i, { description: e.target.value })}
                   placeholder="Leistungsbeschreibung..."
+                />
+                <textarea
+                  rows={Math.max(1, String(item.productDescription ?? "").split(/\r?\n/).length)}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-500 italic leading-4 focus:outline-none focus:ring-2 focus:ring-brand-gold resize-y"
+                  value={item.productDescription ?? ""}
+                  onChange={(e) => updateItem(i, { productDescription: e.target.value || null })}
+                  placeholder="Produktbeschreibung für PDF (optional)..."
                 />
               </div>
               <div className="grid grid-cols-2 gap-2">

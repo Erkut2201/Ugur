@@ -269,7 +269,7 @@ router.put("/items/:id", async (req, res) => {
 // PATCH /api/catalog/items/:id — partial update (z.B. nur unitPrice)
 router.patch("/items/:id", async (req, res) => {
   try {
-    const allowed = ["unitPrice", "name", "description", "unit", "articleNumber", "notes", "sortOrder"];
+    const allowed = ["unitPrice", "name", "description", "productDescription", "unit", "articleNumber", "notes", "sortOrder"];
     const patch: Record<string, unknown> = {};
     for (const key of allowed) {
       if (key in req.body) patch[key] = req.body[key];

@@ -123,6 +123,7 @@ async function migratePostgres(db: any) {
   await db.execute(`ALTER TABLE quote_items ADD COLUMN IF NOT EXISTS product_category_id INTEGER`);
   await db.execute(`ALTER TABLE quote_items ADD COLUMN IF NOT EXISTS product_info_title TEXT`);
   await db.execute(`ALTER TABLE quote_items ADD COLUMN IF NOT EXISTS product_info_text TEXT`);
+  await db.execute(`ALTER TABLE quote_items ADD COLUMN IF NOT EXISTS product_description TEXT`);
 
   await db.execute(`
     CREATE TABLE IF NOT EXISTS invoices (
@@ -184,6 +185,7 @@ async function migratePostgres(db: any) {
   await db.execute(`ALTER TABLE invoice_items ADD COLUMN IF NOT EXISTS product_category_id INTEGER`);
   await db.execute(`ALTER TABLE invoice_items ADD COLUMN IF NOT EXISTS product_info_title TEXT`);
   await db.execute(`ALTER TABLE invoice_items ADD COLUMN IF NOT EXISTS product_info_text TEXT`);
+  await db.execute(`ALTER TABLE invoice_items ADD COLUMN IF NOT EXISTS product_description TEXT`);
 
   await db.execute(`
     CREATE TABLE IF NOT EXISTS protocols (
@@ -268,6 +270,7 @@ async function migratePostgres(db: any) {
     )
   `);
   await db.execute(`ALTER TABLE manufacturers ADD COLUMN IF NOT EXISTS markup_percent NUMERIC(6,2) NOT NULL DEFAULT 0`);
+  await db.execute(`ALTER TABLE catalog_items ADD COLUMN IF NOT EXISTS product_description TEXT`);
 
   await db.execute(`
     CREATE TABLE IF NOT EXISTS product_categories (
@@ -459,6 +462,7 @@ function migrateSQLite(db: any) {
   try { db.exec(`ALTER TABLE quote_items ADD COLUMN product_category_id INTEGER`); } catch {}
   try { db.exec(`ALTER TABLE quote_items ADD COLUMN product_info_title TEXT`); } catch {}
   try { db.exec(`ALTER TABLE quote_items ADD COLUMN product_info_text TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE quote_items ADD COLUMN product_description TEXT`); } catch {}
   db.exec(`
     CREATE TABLE IF NOT EXISTS invoices (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -510,6 +514,7 @@ function migrateSQLite(db: any) {
   try { db.exec(`ALTER TABLE invoice_items ADD COLUMN product_category_id INTEGER`); } catch {}
   try { db.exec(`ALTER TABLE invoice_items ADD COLUMN product_info_title TEXT`); } catch {}
   try { db.exec(`ALTER TABLE invoice_items ADD COLUMN product_info_text TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE invoice_items ADD COLUMN product_description TEXT`); } catch {}
   db.exec(`
     CREATE TABLE IF NOT EXISTS protocols (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -622,6 +627,7 @@ function migrateSQLite(db: any) {
       updated_at TEXT DEFAULT (datetime('now')) NOT NULL
     )
   `);
+  try { db.exec(`ALTER TABLE catalog_items ADD COLUMN product_description TEXT`); } catch {}
   // Remove pre-seeded default units (no longer desired)
   const oldDefaults = ["Stk", "Std", "Pauschal", "m\u00B2", "lfd. m", "m", "kg", "Set"];
   const quoted = oldDefaults.map(u => `'${u.replace(/'/g, "''")}'`).join(", ");
