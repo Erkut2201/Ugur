@@ -180,13 +180,21 @@ export default function DocumentForm({
   const productSearchResults = useMemo(() => {
     const term = productSearch.trim().toLowerCase();
     if (!term) return [];
-    return allCatalogItems.filter(
-      (it) =>
+    return allCatalogItems.filter((it) => {
+      if (selectedManufacturerId !== null) {
+        const cat = catalogCategories.find((c: any) => c.id === it.categoryId);
+        const rootCat = cat?.parentId
+          ? catalogCategories.find((c: any) => c.id === cat.parentId)
+          : cat;
+        if ((rootCat ?? cat)?.manufacturerId !== selectedManufacturerId) return false;
+      }
+      return (
         it.name.toLowerCase().includes(term) ||
         (it.articleNumber ?? "").toLowerCase().includes(term) ||
         (it.description ?? "").toLowerCase().includes(term)
-    );
-  }, [allCatalogItems, productSearch]);
+      );
+    });
+  }, [allCatalogItems, productSearch, selectedManufacturerId, catalogCategories]);
 
   // Kategoriebaum: Nur Top-Level (parentId null), gefiltert nach gewähltem Hersteller
   const topLevelCategories = useMemo(
