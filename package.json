@@ -18,6 +18,8 @@
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
+    "db:import:sqlite-neon": "node scripts/import-sqlite-to-neon.mjs",
+    "db:import:localpg-neon": "node scripts/import-local-postgres-to-neon.mjs",
     "generate:images": "node scripts/generate-images.mjs"
   },
   "dependencies": {

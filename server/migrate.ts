@@ -88,12 +88,20 @@ async function migratePostgres(db: any) {
       subtotal NUMERIC(12,2) NOT NULL DEFAULT 0,
       vat_amount NUMERIC(12,2) NOT NULL DEFAULT 0,
       total NUMERIC(12,2) NOT NULL DEFAULT 0,
+      billing_name TEXT,
+      billing_street TEXT,
+      billing_zip TEXT,
+      billing_city TEXT,
       pdf_s3_key TEXT,
       created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
       updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
     )
   `);
   await db.execute(`ALTER TABLE quotes ADD COLUMN IF NOT EXISTS down_payment_percent NUMERIC(5,2) NOT NULL DEFAULT 50`);
+  await db.execute(`ALTER TABLE quotes ADD COLUMN IF NOT EXISTS billing_name TEXT`);
+  await db.execute(`ALTER TABLE quotes ADD COLUMN IF NOT EXISTS billing_street TEXT`);
+  await db.execute(`ALTER TABLE quotes ADD COLUMN IF NOT EXISTS billing_zip TEXT`);
+  await db.execute(`ALTER TABLE quotes ADD COLUMN IF NOT EXISTS billing_city TEXT`);
 
   await db.execute(`
     CREATE TABLE IF NOT EXISTS quote_items (
@@ -136,6 +144,10 @@ async function migratePostgres(db: any) {
       subtotal NUMERIC(12,2) NOT NULL DEFAULT 0,
       vat_amount NUMERIC(12,2) NOT NULL DEFAULT 0,
       total NUMERIC(12,2) NOT NULL DEFAULT 0,
+      billing_name TEXT,
+      billing_street TEXT,
+      billing_zip TEXT,
+      billing_city TEXT,
       pdf_s3_key TEXT,
       created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
       updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
@@ -145,6 +157,10 @@ async function migratePostgres(db: any) {
   await db.execute(`ALTER TABLE invoices ADD COLUMN IF NOT EXISTS invoice_group_number TEXT`);
   await db.execute(`ALTER TABLE invoices ADD COLUMN IF NOT EXISTS installment_index INTEGER`);
   await db.execute(`ALTER TABLE invoices ADD COLUMN IF NOT EXISTS credited_invoice_id INTEGER`);
+  await db.execute(`ALTER TABLE invoices ADD COLUMN IF NOT EXISTS billing_name TEXT`);
+  await db.execute(`ALTER TABLE invoices ADD COLUMN IF NOT EXISTS billing_street TEXT`);
+  await db.execute(`ALTER TABLE invoices ADD COLUMN IF NOT EXISTS billing_zip TEXT`);
+  await db.execute(`ALTER TABLE invoices ADD COLUMN IF NOT EXISTS billing_city TEXT`);
   await db.execute(`UPDATE invoices SET invoice_group_number = invoice_number WHERE invoice_group_number IS NULL`);
   await db.execute(`UPDATE invoices SET invoice_type = 'standard' WHERE invoice_type IS NULL OR invoice_type = ''`);
 
@@ -245,11 +261,13 @@ async function migratePostgres(db: any) {
       description TEXT,
       website TEXT,
       contact_info TEXT,
+      markup_percent NUMERIC(6,2) NOT NULL DEFAULT 0,
       sort_order INTEGER NOT NULL DEFAULT 0,
       created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
       updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
     )
   `);
+  await db.execute(`ALTER TABLE manufacturers ADD COLUMN IF NOT EXISTS markup_percent NUMERIC(6,2) NOT NULL DEFAULT 0`);
 
   await db.execute(`
     CREATE TABLE IF NOT EXISTS product_categories (
@@ -314,11 +332,13 @@ async function migratePostgres(db: any) {
       description TEXT,
       has_width BOOLEAN NOT NULL DEFAULT true,
       has_depth BOOLEAN NOT NULL DEFAULT true,
+      glass_variant_category_id INTEGER,
       sort_order INTEGER NOT NULL DEFAULT 0,
       created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
       updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
     )
   `);
+  await db.execute(`ALTER TABLE configurator_products ADD COLUMN IF NOT EXISTS glass_variant_category_id INTEGER`);
 
   await db.execute(`
     CREATE TABLE IF NOT EXISTS configurator_prices (
@@ -343,6 +363,17 @@ async function migratePostgres(db: any) {
       name TEXT NOT NULL,
       price_net NUMERIC(12,2) NOT NULL,
       unit TEXT NOT NULL DEFAULT 'Stk',
+      sort_order INTEGER NOT NULL DEFAULT 0
+    )
+  `);
+
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS manufacturer_colors (
+      id SERIAL PRIMARY KEY,
+      manufacturer_id INTEGER NOT NULL REFERENCES manufacturers(id) ON DELETE CASCADE,
+      ral TEXT NOT NULL,
+      name TEXT NOT NULL,
+      hex TEXT NOT NULL DEFAULT '#cccccc',
       sort_order INTEGER NOT NULL DEFAULT 0
     )
   `);
