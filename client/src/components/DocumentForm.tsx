@@ -628,15 +628,13 @@ Bruchsicher, UV-beständig und langlebig, passend zu allen Terrassenüberdachung
                           onChange={(e) => updateItem(i, { description: e.target.value })}
                           placeholder="Leistungsbeschreibung..."
                         />
-                        {item.productDescription !== undefined && (
-                          <textarea
-                            rows={Math.max(1, String(item.productDescription ?? "").split(/\r?\n/).length)}
-                            className="w-full resize-y border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-brand-gold rounded px-1 py-0.5 text-xs text-gray-500 italic leading-4"
-                            value={item.productDescription ?? ""}
-                            onChange={(e) => updateItem(i, { productDescription: e.target.value || null })}
-                            placeholder="Produktbeschreibung für PDF (optional)..."
-                          />
-                        )}
+                        <textarea
+                          rows={Math.max(1, String(item.productDescription ?? "").split(/\r?\n/).length)}
+                          className="w-full resize-y border border-dashed border-gray-200 bg-gray-50/50 focus:outline-none focus:ring-1 focus:ring-brand-gold rounded px-1 py-0.5 text-xs text-gray-500 italic leading-4"
+                          value={item.productDescription ?? ""}
+                          onChange={(e) => updateItem(i, { productDescription: e.target.value || null })}
+                          placeholder="Produktbeschreibung für PDF (optional)..."
+                        />
                       </div>
                       <button
                         type="button"
