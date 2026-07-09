@@ -13,8 +13,6 @@ import {
 
 type DocType = "quote" | "invoice" | "protocol";
 
-const GLOBAL_COUNTER_TYPE = "global";
-
 const prefixMap: Record<DocType, string> = {
   quote: process.env.QUOTE_PREFIX ?? "ANG",
   invoice: process.env.INVOICE_PREFIX ?? "RNG",
@@ -78,11 +76,11 @@ export async function nextDocumentNumber(type: DocType): Promise<string> {
   const year = new Date().getFullYear();
   const tbl = countersTable();
 
-  // Find or create the global counter row for this year
+  // Find or create the per-type counter row for this year
   let rows = await (db as any)
     .select()
     .from(tbl)
-    .where(and(eq(tbl.type, GLOBAL_COUNTER_TYPE), eq(tbl.year, year)))
+    .where(and(eq(tbl.type, type), eq(tbl.year, year)))
     .limit(1);
 
   let nextNum: number;
@@ -90,7 +88,7 @@ export async function nextDocumentNumber(type: DocType): Promise<string> {
   if (rows.length === 0) {
     const inserted = await (db as any)
       .insert(tbl)
-      .values({ type: GLOBAL_COUNTER_TYPE, year, lastNumber: 1 })
+      .values({ type, year, lastNumber: 1 })
       .returning();
     nextNum = inserted[0]?.lastNumber ?? 1;
   } else {
@@ -98,7 +96,7 @@ export async function nextDocumentNumber(type: DocType): Promise<string> {
     await (db as any)
       .update(tbl)
       .set({ lastNumber: nextNum })
-      .where(and(eq(tbl.type, GLOBAL_COUNTER_TYPE), eq(tbl.year, year)));
+      .where(and(eq(tbl.type, type), eq(tbl.year, year)));
   }
 
   return formatDocumentNumber(type, year, nextNum);

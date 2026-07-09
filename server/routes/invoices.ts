@@ -20,9 +20,7 @@ import {
   insertInvoiceSchema,
 } from "../../shared/schema.js";
 import {
-  convertDocumentNumber,
   formatInstallmentInvoiceNumber,
-  getInvoiceGroupNumberFromQuoteNumber,
   nextDocumentNumber,
 } from "../utils/documentNumber.js";
 import { generateInvoicePdf } from "../services/pdfService.js";
@@ -196,7 +194,7 @@ router.post("/from-quote/:quoteId", async (req, res) => {
         return;
       }
 
-      const invoiceNumber = convertDocumentNumber("invoice", quote.quoteNumber);
+      const invoiceNumber = await nextDocumentNumber("invoice");
       const inserted = await db
         .insert(tbl())
         .values({
@@ -238,7 +236,6 @@ router.post("/from-quote/:quoteId", async (req, res) => {
       return;
     }
 
-    const invoiceGroupNumber = getInvoiceGroupNumberFromQuoteNumber(quote.quoteNumber);
     const existingDownPayment = getInstallmentByType(existingInvoices, "down_payment");
     const existingFinal = getInstallmentByType(existingInvoices, "final");
 
@@ -251,6 +248,7 @@ router.post("/from-quote/:quoteId", async (req, res) => {
       const subtotal = roundMoney(parseMoney(quote.subtotal) * (downPaymentPercent / 100));
       const vatAmount = roundMoney(parseMoney(quote.vatAmount) * (downPaymentPercent / 100));
       const total = roundMoney(subtotal + vatAmount);
+      const invoiceGroupNumber = await nextDocumentNumber("invoice");
       const invoiceNumber = formatInstallmentInvoiceNumber(invoiceGroupNumber, 1);
 
       const inserted = await db
@@ -315,6 +313,7 @@ router.post("/from-quote/:quoteId", async (req, res) => {
       return;
     }
 
+    const invoiceGroupNumber = existingDownPayment.invoiceGroupNumber as string;
     const invoiceNumber = formatInstallmentInvoiceNumber(invoiceGroupNumber, 2);
     const inserted = await db
       .insert(tbl())
