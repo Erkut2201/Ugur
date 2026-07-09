@@ -86,7 +86,7 @@ function parseMatrixSections(sheetName, rows) {
           const widthOrHeight = columns[col - 1];
           if (price === null || widthOrHeight === null) continue;
           items.push({
-            name: `${headerLabel} ${widthOrHeight} × ${current[0]}`,
+            name: `Breite (cm) ${widthOrHeight} × Tiefe ${current[0]}`,
             description: null,
             unit: "Pauschal",
             unitPrice: price,

@@ -155,7 +155,7 @@ for (const [typName, produkte] of Object.entries(produktTypen)) {
     const prodCatId = await insertCategory(prodName, null, typId, prodSort++);
     let itemSort = 0;
     for (const { breite, tiefe, preis, hint } of items) {
-      const itemName = `Breite ${breite}m × Tiefe/Höhe ${tiefe}m`;
+      const itemName = `Breite ${breite}m × Tiefe ${tiefe}m`;
       const desc = hint || null;
       await insertItem(prodCatId, null, itemName, desc, "Pauschal", preis, null, itemSort++);
     }
