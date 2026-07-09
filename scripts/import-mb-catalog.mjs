@@ -22,7 +22,10 @@ function clean(value) {
 
 function parseNumber(value) {
   if (typeof value === "number") return value;
-  const normalized = clean(value).replace(/\./g, "").replace(",", ".");
+  const normalized = clean(value)
+    .replace(/\*/g, "")  // Sternchen (*/**/***/etc.) entfernen
+    .replace(/\./g, "")
+    .replace(",", ".");
   const parsed = Number(normalized);
   return Number.isFinite(parsed) ? parsed : null;
 }
