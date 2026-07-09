@@ -2,7 +2,7 @@
 // Runs schema migrations (push) and seeds the admin user on first start.
 // Works for both PostgreSQL and SQLite — dialect detected from env vars.
 
-import "dotenv/config";
+import "./loadEnv.js"; // lädt .env.development (lokal) oder .env (Produktion)
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { getDb } from "./db.js";
@@ -82,6 +82,7 @@ async function migratePostgres(db: any) {
       project_description TEXT,
       notes TEXT,
       payment_terms TEXT,
+      down_payment_percent NUMERIC(5,2) NOT NULL DEFAULT 50,
       status TEXT NOT NULL DEFAULT 'draft',
       vat_rate NUMERIC(5,2) NOT NULL DEFAULT 19,
       subtotal NUMERIC(12,2) NOT NULL DEFAULT 0,
@@ -92,6 +93,7 @@ async function migratePostgres(db: any) {
       updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
     )
   `);
+  await db.execute(`ALTER TABLE quotes ADD COLUMN IF NOT EXISTS down_payment_percent NUMERIC(5,2) NOT NULL DEFAULT 50`);
 
   await db.execute(`
     CREATE TABLE IF NOT EXISTS quote_items (
@@ -99,12 +101,20 @@ async function migratePostgres(db: any) {
       quote_id INTEGER NOT NULL REFERENCES quotes(id) ON DELETE CASCADE,
       position INTEGER NOT NULL,
       description TEXT NOT NULL,
+      manufacturer TEXT,
+      product_category_id INTEGER,
+      product_info_title TEXT,
+      product_info_text TEXT,
       quantity NUMERIC(10,3) NOT NULL DEFAULT 1,
       unit TEXT NOT NULL DEFAULT 'Stk',
       unit_price NUMERIC(12,2) NOT NULL DEFAULT 0,
       total NUMERIC(12,2) NOT NULL DEFAULT 0
     )
   `);
+  await db.execute(`ALTER TABLE quote_items ADD COLUMN IF NOT EXISTS manufacturer TEXT`);
+  await db.execute(`ALTER TABLE quote_items ADD COLUMN IF NOT EXISTS product_category_id INTEGER`);
+  await db.execute(`ALTER TABLE quote_items ADD COLUMN IF NOT EXISTS product_info_title TEXT`);
+  await db.execute(`ALTER TABLE quote_items ADD COLUMN IF NOT EXISTS product_info_text TEXT`);
 
   await db.execute(`
     CREATE TABLE IF NOT EXISTS invoices (
@@ -112,6 +122,10 @@ async function migratePostgres(db: any) {
       invoice_number TEXT NOT NULL UNIQUE,
       quote_id INTEGER REFERENCES quotes(id),
       customer_id INTEGER REFERENCES customers(id),
+      invoice_type TEXT NOT NULL DEFAULT 'standard',
+      invoice_group_number TEXT,
+      installment_index INTEGER,
+      credited_invoice_id INTEGER,
       date TEXT NOT NULL,
       due_date TEXT,
       payment_terms TEXT,
@@ -127,6 +141,12 @@ async function migratePostgres(db: any) {
       updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
     )
   `);
+  await db.execute(`ALTER TABLE invoices ADD COLUMN IF NOT EXISTS invoice_type TEXT NOT NULL DEFAULT 'standard'`);
+  await db.execute(`ALTER TABLE invoices ADD COLUMN IF NOT EXISTS invoice_group_number TEXT`);
+  await db.execute(`ALTER TABLE invoices ADD COLUMN IF NOT EXISTS installment_index INTEGER`);
+  await db.execute(`ALTER TABLE invoices ADD COLUMN IF NOT EXISTS credited_invoice_id INTEGER`);
+  await db.execute(`UPDATE invoices SET invoice_group_number = invoice_number WHERE invoice_group_number IS NULL`);
+  await db.execute(`UPDATE invoices SET invoice_type = 'standard' WHERE invoice_type IS NULL OR invoice_type = ''`);
 
   await db.execute(`
     CREATE TABLE IF NOT EXISTS invoice_items (
@@ -134,12 +154,20 @@ async function migratePostgres(db: any) {
       invoice_id INTEGER NOT NULL REFERENCES invoices(id) ON DELETE CASCADE,
       position INTEGER NOT NULL,
       description TEXT NOT NULL,
+      manufacturer TEXT,
+      product_category_id INTEGER,
+      product_info_title TEXT,
+      product_info_text TEXT,
       quantity NUMERIC(10,3) NOT NULL DEFAULT 1,
       unit TEXT NOT NULL DEFAULT 'Stk',
       unit_price NUMERIC(12,2) NOT NULL DEFAULT 0,
       total NUMERIC(12,2) NOT NULL DEFAULT 0
     )
   `);
+  await db.execute(`ALTER TABLE invoice_items ADD COLUMN IF NOT EXISTS manufacturer TEXT`);
+  await db.execute(`ALTER TABLE invoice_items ADD COLUMN IF NOT EXISTS product_category_id INTEGER`);
+  await db.execute(`ALTER TABLE invoice_items ADD COLUMN IF NOT EXISTS product_info_title TEXT`);
+  await db.execute(`ALTER TABLE invoice_items ADD COLUMN IF NOT EXISTS product_info_text TEXT`);
 
   await db.execute(`
     CREATE TABLE IF NOT EXISTS protocols (
@@ -210,10 +238,114 @@ async function migratePostgres(db: any) {
     )
   `);
 
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS manufacturers (
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL UNIQUE,
+      description TEXT,
+      website TEXT,
+      contact_info TEXT,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+      updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+    )
+  `);
+
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS product_categories (
+      id SERIAL PRIMARY KEY,
+      manufacturer_id INTEGER NOT NULL REFERENCES manufacturers(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      description TEXT,
+      product_info_text TEXT,
+      parent_id INTEGER,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+      updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+    )
+  `);
+
+  // If product_categories already exists without manufacturer_id, add the column
+  await db.execute(`
+    ALTER TABLE product_categories ADD COLUMN IF NOT EXISTS manufacturer_id INTEGER REFERENCES manufacturers(id) ON DELETE CASCADE
+  `);
+
+  // Seed APT manufacturer for existing data
+  await db.execute(`
+    INSERT INTO manufacturers (name, description, sort_order)
+    SELECT 'APT', 'APT Terrassendielen & Produkte', 0
+    WHERE NOT EXISTS (SELECT 1 FROM manufacturers WHERE name = 'APT')
+  `);
+
+  // Assign all existing categories without a manufacturer to APT
+  await db.execute(`
+    UPDATE product_categories
+    SET manufacturer_id = (SELECT id FROM manufacturers WHERE name = 'APT')
+    WHERE manufacturer_id IS NULL
+  `);
+  await db.execute(`ALTER TABLE product_categories ADD COLUMN IF NOT EXISTS product_info_text TEXT`);
+
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS catalog_items (
+      id SERIAL PRIMARY KEY,
+      category_id INTEGER NOT NULL REFERENCES product_categories(id) ON DELETE CASCADE,
+      article_number TEXT,
+      name TEXT NOT NULL,
+      description TEXT,
+      unit TEXT NOT NULL DEFAULT 'Stk',
+      unit_price NUMERIC(12,2) NOT NULL DEFAULT 0,
+      notes TEXT,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+      updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+    )
+  `);
+
   // Remove pre-seeded default units (no longer desired)
   const oldDefaults = ["Stk", "Std", "Pauschal", "m\u00B2", "lfd. m", "m", "kg", "Set"];
   const placeholders = oldDefaults.map((_, i) => `$${i + 1}`).join(", ");
   await db.execute(`DELETE FROM units_catalog WHERE name IN (${placeholders})`, oldDefaults).catch(() => {});
+
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS configurator_products (
+      id SERIAL PRIMARY KEY,
+      manufacturer_id INTEGER NOT NULL REFERENCES manufacturers(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      description TEXT,
+      has_width BOOLEAN NOT NULL DEFAULT true,
+      has_depth BOOLEAN NOT NULL DEFAULT true,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+      updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+    )
+  `);
+
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS configurator_prices (
+      id SERIAL PRIMARY KEY,
+      product_id INTEGER NOT NULL REFERENCES configurator_products(id) ON DELETE CASCADE,
+      width NUMERIC(10,2) NOT NULL,
+      depth NUMERIC(10,2) NOT NULL,
+      price_net NUMERIC(12,2) NOT NULL,
+      source TEXT
+    )
+  `);
+
+  // Fix column type if table already existed with smaller precision
+  await db.execute(`ALTER TABLE configurator_prices ALTER COLUMN width TYPE NUMERIC(10,2)`).catch(() => {});
+  await db.execute(`ALTER TABLE configurator_prices ALTER COLUMN depth TYPE NUMERIC(10,2)`).catch(() => {});
+
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS configurator_accessories (
+      id SERIAL PRIMARY KEY,
+      manufacturer_id INTEGER NOT NULL REFERENCES manufacturers(id) ON DELETE CASCADE,
+      category TEXT NOT NULL,
+      name TEXT NOT NULL,
+      price_net NUMERIC(12,2) NOT NULL,
+      unit TEXT NOT NULL DEFAULT 'Stk',
+      sort_order INTEGER NOT NULL DEFAULT 0
+    )
+  `);
 
   console.log("[migrate] PostgreSQL tables ensured");
 }
@@ -264,6 +396,7 @@ function migrateSQLite(db: any) {
       project_description TEXT,
       notes TEXT,
       payment_terms TEXT,
+      down_payment_percent REAL NOT NULL DEFAULT 50,
       status TEXT NOT NULL DEFAULT 'draft',
       vat_rate REAL NOT NULL DEFAULT 19,
       subtotal REAL NOT NULL DEFAULT 0,
@@ -274,24 +407,37 @@ function migrateSQLite(db: any) {
       updated_at TEXT DEFAULT (datetime('now')) NOT NULL
     )
   `);
+  try { db.exec(`ALTER TABLE quotes ADD COLUMN down_payment_percent REAL NOT NULL DEFAULT 50`); } catch {};
   db.exec(`
     CREATE TABLE IF NOT EXISTS quote_items (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       quote_id INTEGER NOT NULL,
       position INTEGER NOT NULL,
       description TEXT NOT NULL,
+      manufacturer TEXT,
+      product_category_id INTEGER,
+      product_info_title TEXT,
+      product_info_text TEXT,
       quantity REAL NOT NULL DEFAULT 1,
       unit TEXT NOT NULL DEFAULT 'Stk',
       unit_price REAL NOT NULL DEFAULT 0,
       total REAL NOT NULL DEFAULT 0
     )
   `);
+  try { db.exec(`ALTER TABLE quote_items ADD COLUMN manufacturer TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE quote_items ADD COLUMN product_category_id INTEGER`); } catch {}
+  try { db.exec(`ALTER TABLE quote_items ADD COLUMN product_info_title TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE quote_items ADD COLUMN product_info_text TEXT`); } catch {}
   db.exec(`
     CREATE TABLE IF NOT EXISTS invoices (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       invoice_number TEXT NOT NULL UNIQUE,
       quote_id INTEGER,
       customer_id INTEGER,
+      invoice_type TEXT NOT NULL DEFAULT 'standard',
+      invoice_group_number TEXT,
+      installment_index INTEGER,
+      credited_invoice_id INTEGER,
       date TEXT NOT NULL,
       due_date TEXT,
       payment_terms TEXT,
@@ -307,18 +453,32 @@ function migrateSQLite(db: any) {
       updated_at TEXT DEFAULT (datetime('now')) NOT NULL
     )
   `);
+  try { db.exec(`ALTER TABLE invoices ADD COLUMN invoice_type TEXT NOT NULL DEFAULT 'standard'`); } catch {}
+  try { db.exec(`ALTER TABLE invoices ADD COLUMN invoice_group_number TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE invoices ADD COLUMN installment_index INTEGER`); } catch {}
+  try { db.exec(`ALTER TABLE invoices ADD COLUMN credited_invoice_id INTEGER`); } catch {}
+  try { db.exec(`UPDATE invoices SET invoice_group_number = invoice_number WHERE invoice_group_number IS NULL`); } catch {}
+  try { db.exec(`UPDATE invoices SET invoice_type = 'standard' WHERE invoice_type IS NULL OR invoice_type = ''`); } catch {}
   db.exec(`
     CREATE TABLE IF NOT EXISTS invoice_items (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       invoice_id INTEGER NOT NULL,
       position INTEGER NOT NULL,
       description TEXT NOT NULL,
+      manufacturer TEXT,
+      product_category_id INTEGER,
+      product_info_title TEXT,
+      product_info_text TEXT,
       quantity REAL NOT NULL DEFAULT 1,
       unit TEXT NOT NULL DEFAULT 'Stk',
       unit_price REAL NOT NULL DEFAULT 0,
       total REAL NOT NULL DEFAULT 0
     )
   `);
+  try { db.exec(`ALTER TABLE invoice_items ADD COLUMN manufacturer TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE invoice_items ADD COLUMN product_category_id INTEGER`); } catch {}
+  try { db.exec(`ALTER TABLE invoice_items ADD COLUMN product_info_title TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE invoice_items ADD COLUMN product_info_text TEXT`); } catch {}
   db.exec(`
     CREATE TABLE IF NOT EXISTS protocols (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -383,10 +543,93 @@ function migrateSQLite(db: any) {
       created_at TEXT DEFAULT (datetime('now')) NOT NULL
     )
   `);
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS manufacturers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE,
+      description TEXT,
+      website TEXT,
+      contact_info TEXT,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT DEFAULT (datetime('now')) NOT NULL,
+      updated_at TEXT DEFAULT (datetime('now')) NOT NULL
+    )
+  `);
+  // Seed APT manufacturer for existing data
+  try {
+    db.exec(`INSERT OR IGNORE INTO manufacturers (name, description, sort_order) VALUES ('APT', 'APT Terrassendielen & Produkte', 0)`);
+  } catch {}
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS product_categories (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      manufacturer_id INTEGER NOT NULL DEFAULT 1,
+      name TEXT NOT NULL,
+      description TEXT,
+      product_info_text TEXT,
+      parent_id INTEGER,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT DEFAULT (datetime('now')) NOT NULL,
+      updated_at TEXT DEFAULT (datetime('now')) NOT NULL
+    )
+  `);
+  try { db.exec(`ALTER TABLE product_categories ADD COLUMN manufacturer_id INTEGER NOT NULL DEFAULT 1`); } catch {}
+  try { db.exec(`ALTER TABLE product_categories ADD COLUMN product_info_text TEXT`); } catch {}
+  // Assign existing categories without manufacturer to APT (id=1)
+  try { db.exec(`UPDATE product_categories SET manufacturer_id = (SELECT id FROM manufacturers WHERE name = 'APT') WHERE manufacturer_id IS NULL OR manufacturer_id = 0`); } catch {}
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS catalog_items (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      category_id INTEGER NOT NULL,
+      article_number TEXT,
+      name TEXT NOT NULL,
+      description TEXT,
+      unit TEXT NOT NULL DEFAULT 'Stk',
+      unit_price REAL NOT NULL DEFAULT 0,
+      notes TEXT,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT DEFAULT (datetime('now')) NOT NULL,
+      updated_at TEXT DEFAULT (datetime('now')) NOT NULL
+    )
+  `);
   // Remove pre-seeded default units (no longer desired)
   const oldDefaults = ["Stk", "Std", "Pauschal", "m\u00B2", "lfd. m", "m", "kg", "Set"];
   const quoted = oldDefaults.map(u => `'${u.replace(/'/g, "''")}'`).join(", ");
   try { db.exec(`DELETE FROM units_catalog WHERE name IN (${quoted})`); } catch {}
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS configurator_products (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      manufacturer_id INTEGER NOT NULL,
+      name TEXT NOT NULL,
+      description TEXT,
+      has_width INTEGER NOT NULL DEFAULT 1,
+      has_depth INTEGER NOT NULL DEFAULT 1,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT DEFAULT (datetime('now')) NOT NULL,
+      updated_at TEXT DEFAULT (datetime('now')) NOT NULL
+    )
+  `);
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS configurator_prices (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      product_id INTEGER NOT NULL,
+      width REAL NOT NULL,
+      depth REAL NOT NULL,
+      price_net REAL NOT NULL,
+      source TEXT
+    )
+  `);
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS configurator_accessories (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      manufacturer_id INTEGER NOT NULL,
+      category TEXT NOT NULL,
+      name TEXT NOT NULL,
+      price_net REAL NOT NULL,
+      unit TEXT NOT NULL DEFAULT 'Stk',
+      sort_order INTEGER NOT NULL DEFAULT 0
+    )
+  `);
   console.log("[migrate] SQLite tables ensured");
 }
 

@@ -22,8 +22,8 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="text-brand-red font-black text-3xl tracking-wider">KONZEPT</div>
-          <div className="text-white font-bold text-2xl">Terrasse BW</div>
+          <div className="text-brand-gold font-black text-3xl tracking-wider">AC PREMIUM</div>
+          <div className="text-white font-bold text-2xl">Bau</div>
           <div className="text-gray-400 text-sm mt-2">Büroverwaltung</div>
         </div>
 
@@ -42,7 +42,7 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoFocus
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold focus:border-transparent"
                 placeholder="admin@beispiel.de"
               />
             </div>
@@ -54,7 +54,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold focus:border-transparent"
                 placeholder="••••••••"
               />
             </div>
@@ -68,7 +68,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loginPending}
-              className="w-full bg-brand-red text-white font-semibold py-2.5 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full bg-brand-gold text-white font-semibold py-2.5 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {loginPending ? "Anmelden..." : "Anmelden"}
             </button>

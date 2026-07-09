@@ -324,7 +324,7 @@ export const productPages: ProductPageContent[] = [
     slug: "unterglasmarkise",
     title: "Unterglasmarkise",
     category: "Markisen",
-    intro: "Die Konzept Terrasse Unterglasmarkise vereint modernes Design, innovative Technik und höchste Qualität. Speziell für unsere Dachsysteme entwickelt, mit Somfy-Motor, 10 Stofffarben und dauerhaft hoher Tuchspannung durch integrierte Gasdruckfeder.",
+    intro: "Die AC Premium Bau Unterglasmarkise vereint modernes Design, innovative Technik und höchste Qualität. Speziell für unsere Dachsysteme entwickelt, mit Somfy-Motor, 10 Stofffarben und dauerhaft hoher Tuchspannung durch integrierte Gasdruckfeder.",
     highlights: ["Somfy Motor System", "10 Stofffarben", "Integrierte Gasdruckfeder", "Innovativer Montageriegel"],
     benefits: ["Dauerhaft hohe Tuchspannung", "Ruhiger, gleichmäßiger Lauf", "Vereinfachte Direktmontage", "Stufenlose Positionierung per Fernbedienung"],
     advantageTitle: "Mehr Lebensqualität auf Ihrer Terrasse",

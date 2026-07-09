@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: konzept-terrasse
+    name: ac-premium-bau
     runtime: node
     plan: free
     region: frankfurt
@@ -11,6 +11,17 @@ services:
         value: production
       - key: PORT
         value: 10000
+      - key: PUBLIC_URL
+        value: https://konzept-terrasse.de
+      - key: INVOICE_URL
+        value: https://rechnungen.konzept-terrasse.de
+      - key: COOKIE_DOMAIN
+        value: rechnungen.konzept-terrasse.de
+      - key: ALLOWED_ORIGINS
+        value: https://konzept-terrasse.de,https://www.konzept-terrasse.de,https://rechnungen.konzept-terrasse.de
+      - key: PUBLIC_INQUIRY_EMAIL
+        sync: false
+      # VITE_PUBLIC_API_BASE_URL gehört später in den IONOS/Public-Build, nicht in Render
 
       # ── Firmendaten ────────────────────────────────────────────────────────
       - key: COMPANY_NAME

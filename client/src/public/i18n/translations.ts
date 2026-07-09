@@ -24,7 +24,7 @@ export const translations = {
       primaryCta: "Kostenloses Angebot anfragen",
       secondaryCta: "Produkte entdecken",
       highlightsEyebrow: "Unsere Stärken",
-      highlightsTitle: "Warum Konzept Terrasse?",
+      highlightsTitle: "Warum AC Premium Bau?",
       productsEyebrow: "Sortiment",
       productsTitle: "Individuell geplant. Präzise gefertigt. Professionell montiert.",
       more: "Mehr erfahren →",
@@ -89,7 +89,7 @@ export const translations = {
         "Von der Terrassenüberdachung bis zum Eingangsvordach – entdecken Sie unser vollständiges Sortiment hochwertiger Überdachungslösungen.",
       productsIntro:
         "Jedes Produkt wird nach Ihren Maßen und Wünschen gefertigt. Wählen Sie Ihr System und fordern Sie ein persönliches Angebot an.",
-      companyTitle: "Über Konzept Terrasse",
+      companyTitle: "Über AC Premium Bau",
       companyDescription:
         "Seit Jahren planen und montieren wir maßgefertigte Überdachungslösungen für private und gewerbliche Kunden in der Region.",
       contactTitle: "Jetzt Kontakt aufnehmen",
@@ -155,7 +155,7 @@ export const translations = {
       primaryCta: "Request a free quote",
       secondaryCta: "Discover products",
       highlightsEyebrow: "Our strengths",
-      highlightsTitle: "Why Konzept Terrasse?",
+      highlightsTitle: "Why AC Premium Bau?",
       productsEyebrow: "Our range",
       productsTitle: "Individually planned. Precisely manufactured. Professionally installed.",
       more: "Learn more →",
@@ -220,7 +220,7 @@ export const translations = {
         "From terrace roofs to entrance canopies — discover our full range of premium roofing solutions.",
       productsIntro:
         "Every product is made to your dimensions and wishes. Choose your system and request a personal quote.",
-      companyTitle: "About Konzept Terrasse",
+      companyTitle: "About AC Premium Bau",
       companyDescription:
         "For years we have been planning and installing custom roofing solutions for residential and commercial clients in the region.",
       contactTitle: "Get in touch now",

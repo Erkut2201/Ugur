@@ -2,7 +2,7 @@
 // Dual-mode DB: PostgreSQL (production) or SQLite (local fallback via node:sqlite built-in)
 // Dialect is determined entirely from env vars — no code changes needed
 
-import "dotenv/config";
+import "./loadEnv.js"; // lädt .env.development (lokal) oder .env (Produktion)
 import { createRequire } from "module";
 import { USE_POSTGRES } from "../shared/schema.js";
 
@@ -16,10 +16,14 @@ function buildDb() {
     const { drizzle } = require("drizzle-orm/node-postgres");
     const { Pool } = require("pg");
 
+    // SSL-Verhalten aus der URL lesen: sslmode=disable → kein SSL, sonst SSL mit self-signed OK
+    const pgUrl = process.env.POSTGRES_URL ?? "";
+    const sslFromUrl = pgUrl.includes("sslmode=disable") ? false : { rejectUnauthorized: false };
+
     const poolConfig = process.env.POSTGRES_URL
       ? {
           connectionString: process.env.POSTGRES_URL,
-          ssl: { rejectUnauthorized: false },
+          ssl: sslFromUrl,
           max: 20,
           idleTimeoutMillis: 30_000,
         }

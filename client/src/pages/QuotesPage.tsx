@@ -24,6 +24,7 @@ export default function QuotesPage() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [emailTarget, setEmailTarget] = useState<any>(null);
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [search, setSearch] = useState("");
 
   const { data: quotes = [], isLoading } = useQuery<any[]>({
     queryKey: ["/api/quotes"],
@@ -66,14 +67,14 @@ export default function QuotesPage() {
   });
 
   const fromQuoteMutation = useMutation({
-    mutationFn: (quoteId: number) => api.post<any>(`/api/invoices/from-quote/${quoteId}`),
-    onSuccess: (_data, quoteId) => {
-      // Auto-set quote status to "accepted"
-      api.patch(`/api/quotes/${quoteId}/status`, { status: "accepted" });
+    mutationFn: ({ quoteId, invoiceType }: { quoteId: number; invoiceType: "standard" | "down_payment" | "final" }) =>
+      api.post<any>(`/api/invoices/from-quote/${quoteId}`, { invoiceType }),
+    onSuccess: (_data, variables) => {
+      api.patch(`/api/quotes/${variables.quoteId}/status`, { status: "accepted" });
       qc.invalidateQueries({ queryKey: ["/api/quotes"] });
       qc.invalidateQueries({ queryKey: ["/api/invoices"] });
-      // No navigation — user clicks the badge to go to invoices
     },
+    onError: (err: any) => alert(err.message ?? err),
   });
 
   const emailMutation = useMutation({
@@ -136,11 +137,21 @@ export default function QuotesPage() {
         />
       )}
       <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-black text-gray-900">Angebote</h1>
-        <button onClick={() => { setEditing(null); setEditingId(null); setView("form"); }} className="bg-brand-red text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-700">
+        <button onClick={() => { setEditing(null); setEditingId(null); setView("form"); }} className="bg-brand-gold text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90">
           + Neues Angebot
         </button>
+      </div>
+
+      <div className="mb-4">
+        <input
+          type="search"
+          placeholder="Suchen nach Nummer, Projekt…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full md:w-80 border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-gold"
+        />
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -148,7 +159,18 @@ export default function QuotesPage() {
           <div className="p-8 text-center text-gray-400 text-sm">Laden...</div>
         ) : quotes.length === 0 ? (
           <div className="p-8 text-center text-gray-400 text-sm">Noch keine Angebote.</div>
-        ) : (
+        ) : (() => {
+          const sl = search.toLowerCase();
+          const filtered = search
+            ? quotes.filter((q) =>
+                q.quoteNumber?.toLowerCase().includes(sl) ||
+                q.projectDescription?.toLowerCase().includes(sl)
+              )
+            : quotes;
+          if (filtered.length === 0) return (
+            <div className="p-8 text-center text-gray-400 text-sm">Keine Treffer für „{search}".</div>
+          );
+          return (
           <>
             {/* Desktop table */}
             <table className="hidden md:table w-full text-sm">
@@ -163,24 +185,30 @@ export default function QuotesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {quotes.map((q) => (
+                {filtered.map((q) => (
                   <tr key={q.id} className="hover:bg-gray-50">
                     <td className="px-5 py-3">
                       <div className="font-mono text-xs text-gray-700">{q.quoteNumber}</div>
-                      {q.linkedInvoiceNumber && (
-                        <button
-                          onClick={() => navigate("/invoices")}
-                          className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5 hover:bg-emerald-100 hover:border-emerald-400 transition-colors"
-                          title={`Zur Rechnung ${q.linkedInvoiceNumber} springen`}
-                        >
-                          <span>&#8594;</span>
-                          <span className="font-mono">{q.linkedInvoiceNumber}</span>
-                        </button>
+                      {(q.linkedInvoices ?? []).length > 0 && (
+                        <div className="mt-1 flex flex-wrap gap-1">
+                          {(q.linkedInvoices ?? []).map((invoice: any) => (
+                            <button
+                              key={invoice.id}
+                              onClick={() => navigate("/invoices")}
+                              className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5 hover:bg-emerald-100 hover:border-emerald-400 transition-colors"
+                              title={`Zur Rechnung ${invoice.invoiceNumber} springen`}
+                            >
+                              <span>&#8594;</span>
+                              <span className="font-mono">{invoice.invoiceNumber}</span>
+                              <span>{invoice.invoiceType === "down_payment" ? "AZ" : invoice.invoiceType === "final" ? "Final" : "Std"}</span>
+                            </button>
+                          ))}
+                        </div>
                       )}
                     </td>
                     <td className="px-5 py-3 text-gray-500">{new Intl.DateTimeFormat("de-DE").format(new Date(q.date))}</td>
                     <td className="px-5 py-3 text-gray-700 max-w-[200px] truncate">{q.projectDescription ?? "—"}</td>
-                    <td className="px-5 py-3 text-right font-medium">{parseFloat(q.total).toLocaleString("de-DE", { minimumFractionDigits: 2 })} €</td>
+                    <td className="px-5 py-3 text-right font-medium text-gray-900">{parseFloat(q.total).toLocaleString("de-DE", { minimumFractionDigits: 2 })} €</td>
                     <td className="px-5 py-3">
                       <select
                         value={q.status}
@@ -201,10 +229,23 @@ export default function QuotesPage() {
                         )}
                         <button onClick={() => window.open(`/api/quotes/${q.id}/pdf/${q.quoteNumber}.pdf`, "_blank")} className="text-xs text-gray-600 hover:underline">PDF</button>
                         <button onClick={() => openEmail(q)} className="text-xs text-gray-600 hover:underline">E-Mail</button>
-                        {q.linkedInvoiceNumber ? (
+                        {Number(q.downPaymentPercent ?? 0) > 0 ? (
+                          <>
+                            {q.downPaymentInvoiceNumber ? (
+                              <span className="text-xs text-emerald-600 font-medium cursor-default" title={`Anzahlungsrechnung ${q.downPaymentInvoiceNumber} bereits erstellt`}>✓ AZ</span>
+                            ) : (
+                              <button onClick={() => { if (confirm("Anzahlungsrechnung aus diesem Angebot erstellen?")) fromQuoteMutation.mutate({ quoteId: q.id, invoiceType: "down_payment" }); }} className="text-xs text-green-600 hover:underline">→ AZ-Rechnung</button>
+                            )}
+                            {q.finalInvoiceNumber ? (
+                              <span className="text-xs text-emerald-600 font-medium cursor-default" title={`Finale Rechnung ${q.finalInvoiceNumber} bereits erstellt`}>✓ Final</span>
+                            ) : (
+                              <button onClick={() => { if (confirm("Finale Rechnung aus diesem Angebot erstellen?")) fromQuoteMutation.mutate({ quoteId: q.id, invoiceType: "final" }); }} className="text-xs text-green-600 hover:underline">→ Finale Rechnung</button>
+                            )}
+                          </>
+                        ) : q.linkedInvoiceNumber ? (
                           <span className="text-xs text-emerald-600 font-medium cursor-default" title={`Rechnung ${q.linkedInvoiceNumber} bereits erstellt`}>✓ Rechnung</span>
                         ) : (
-                          <button onClick={() => { if (confirm("Rechnung aus diesem Angebot erstellen?")) fromQuoteMutation.mutate(q.id); }} className="text-xs text-green-600 hover:underline">→ Rechnung</button>
+                          <button onClick={() => { if (confirm("Rechnung aus diesem Angebot erstellen?")) fromQuoteMutation.mutate({ quoteId: q.id, invoiceType: "standard" }); }} className="text-xs text-green-600 hover:underline">→ Rechnung</button>
                         )}
                         {!["accepted", "rejected"].includes(q.status) && (
                           <button onClick={() => { if (confirm(`Angebot ${q.quoteNumber} löschen?`)) deleteMutation.mutate(q.id); }} className="text-xs text-red-600 hover:underline">Löschen</button>
@@ -218,18 +259,23 @@ export default function QuotesPage() {
 
             {/* Mobile cards */}
             <div className="md:hidden divide-y divide-gray-100">
-              {quotes.map((q) => (
+              {filtered.map((q) => (
                 <div key={q.id} className="p-4 space-y-2">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <div className="font-mono text-xs font-bold text-gray-800">{q.quoteNumber}</div>
-                      {q.linkedInvoiceNumber && (
-                        <button
-                          onClick={() => navigate("/invoices")}
-                          className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5"
-                        >
-                          &#8594; {q.linkedInvoiceNumber}
-                        </button>
+                      {(q.linkedInvoices ?? []).length > 0 && (
+                        <div className="mt-1 flex flex-wrap gap-1">
+                          {(q.linkedInvoices ?? []).map((invoice: any) => (
+                            <button
+                              key={invoice.id}
+                              onClick={() => navigate("/invoices")}
+                              className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5"
+                            >
+                              &#8594; {invoice.invoiceNumber} {invoice.invoiceType === "down_payment" ? "AZ" : invoice.invoiceType === "final" ? "Final" : "Std"}
+                            </button>
+                          ))}
+                        </div>
                       )}
                       <div className="text-sm text-gray-600 mt-0.5 truncate">{q.projectDescription ?? "—"}</div>
                       <div className="text-xs text-gray-400 mt-0.5">{new Intl.DateTimeFormat("de-DE").format(new Date(q.date))}</div>
@@ -255,10 +301,23 @@ export default function QuotesPage() {
                     )}
                     <button onClick={() => window.open(`/api/quotes/${q.id}/pdf/${q.quoteNumber}.pdf`, "_blank")} className="text-xs text-gray-600 hover:underline">PDF</button>
                     <button onClick={() => openEmail(q)} className="text-xs text-gray-600 hover:underline">E-Mail</button>
-                    {q.linkedInvoiceNumber ? (
+                    {Number(q.downPaymentPercent ?? 0) > 0 ? (
+                      <>
+                        {q.downPaymentInvoiceNumber ? (
+                          <span className="text-xs text-emerald-600 font-medium">✓ AZ</span>
+                        ) : (
+                          <button onClick={() => { if (confirm("Anzahlungsrechnung aus diesem Angebot erstellen?")) fromQuoteMutation.mutate({ quoteId: q.id, invoiceType: "down_payment" }); }} className="text-xs text-green-600 hover:underline">→ AZ-Rechnung</button>
+                        )}
+                        {q.finalInvoiceNumber ? (
+                          <span className="text-xs text-emerald-600 font-medium">✓ Final</span>
+                        ) : (
+                          <button onClick={() => { if (confirm("Finale Rechnung aus diesem Angebot erstellen?")) fromQuoteMutation.mutate({ quoteId: q.id, invoiceType: "final" }); }} className="text-xs text-green-600 hover:underline">→ Finale Rechnung</button>
+                        )}
+                      </>
+                    ) : q.linkedInvoiceNumber ? (
                       <span className="text-xs text-emerald-600 font-medium">✓ Rechnung</span>
                     ) : (
-                      <button onClick={() => { if (confirm("Rechnung aus diesem Angebot erstellen?")) fromQuoteMutation.mutate(q.id); }} className="text-xs text-green-600 hover:underline">→ Rechnung</button>
+                      <button onClick={() => { if (confirm("Rechnung aus diesem Angebot erstellen?")) fromQuoteMutation.mutate({ quoteId: q.id, invoiceType: "standard" }); }} className="text-xs text-green-600 hover:underline">→ Rechnung</button>
                     )}
                     {!["accepted", "rejected"].includes(q.status) && (
                       <button onClick={() => { if (confirm(`Angebot ${q.quoteNumber} löschen?`)) deleteMutation.mutate(q.id); }} className="text-xs text-red-600 hover:underline">Löschen</button>
@@ -268,7 +327,8 @@ export default function QuotesPage() {
               ))}
             </div>
           </>
-        )}
+          );
+        })()}
       </div>
     </div>
     </>

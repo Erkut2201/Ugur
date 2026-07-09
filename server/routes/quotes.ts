@@ -51,21 +51,38 @@ router.get("/", async (_req, res) => {
     const { db } = getDb();
     const rows = await db.select().from(tbl()).orderBy(desc(tbl().createdAt));
     if (rows.length === 0) { res.json([]); return; }
-    // Enrich each quote with linked invoice number
     const quoteIds = rows.map((r: any) => r.id);
     const linkedInvoices = await db
       .select()
       .from(invTbl())
       .where(inArray(invTbl().quoteId, quoteIds));
-    const invoiceByQuoteId = new Map<number, any>();
+    const invoicesByQuoteId = new Map<number, any[]>();
     for (const inv of linkedInvoices) {
-      if (inv.quoteId != null) invoiceByQuoteId.set(inv.quoteId, inv);
+      if (inv.quoteId == null) continue;
+      if (!invoicesByQuoteId.has(inv.quoteId)) invoicesByQuoteId.set(inv.quoteId, []);
+      invoicesByQuoteId.get(inv.quoteId)!.push(inv);
     }
-    const enriched = rows.map((r: any) => ({
-      ...r,
-      linkedInvoiceNumber: invoiceByQuoteId.get(r.id)?.invoiceNumber ?? null,
-      linkedInvoiceId: invoiceByQuoteId.get(r.id)?.id ?? null,
-    }));
+    const enriched = rows.map((r: any) => {
+      const quoteInvoices = invoicesByQuoteId.get(r.id) ?? [];
+      const standardInvoice = quoteInvoices.find((inv) => (inv.invoiceType ?? "standard") === "standard") ?? null;
+      const downPaymentInvoice = quoteInvoices.find((inv) => inv.invoiceType === "down_payment") ?? null;
+      const finalInvoice = quoteInvoices.find((inv) => inv.invoiceType === "final") ?? null;
+      return {
+        ...r,
+        linkedInvoiceNumber: finalInvoice?.invoiceNumber ?? standardInvoice?.invoiceNumber ?? downPaymentInvoice?.invoiceNumber ?? null,
+        linkedInvoiceId: finalInvoice?.id ?? standardInvoice?.id ?? downPaymentInvoice?.id ?? null,
+        linkedInvoices: quoteInvoices.map((inv) => ({
+          id: inv.id,
+          invoiceNumber: inv.invoiceNumber,
+          invoiceType: inv.invoiceType ?? "standard",
+          status: inv.status,
+        })),
+        downPaymentInvoiceNumber: downPaymentInvoice?.invoiceNumber ?? null,
+        downPaymentInvoiceId: downPaymentInvoice?.id ?? null,
+        finalInvoiceNumber: finalInvoice?.invoiceNumber ?? null,
+        finalInvoiceId: finalInvoice?.id ?? null,
+      };
+    });
     res.json(enriched);
   } catch (err) {
     console.error("[quotes/list]", err);

@@ -79,7 +79,7 @@ export default function CustomersPage() {
         <h1 className="text-2xl font-black text-gray-900">Kunden</h1>
         <button
           onClick={openCreate}
-          className="bg-brand-red text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-700 transition-colors"
+          className="bg-brand-gold text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition-colors"
         >
           + Neuer Kunde
         </button>
@@ -91,7 +91,7 @@ export default function CustomersPage() {
           placeholder="Suchen..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-brand-red"
+          className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-brand-gold"
         />
       </div>
 
@@ -106,8 +106,8 @@ export default function CustomersPage() {
             <table className="hidden md:table w-full text-sm">
               <thead>
                 <tr className="bg-gray-50 text-left text-xs text-gray-500 font-semibold uppercase tracking-wide">
-                  <th className="px-6 py-3">Intern</th>
-                  <th className="px-6 py-3">Name</th>
+                  <th className="px-6 py-3">Vorname</th>
+                  <th className="px-6 py-3">Nachname</th>
                   <th className="px-6 py-3">Firma</th>
                   <th className="px-6 py-3">Ort</th>
                   <th className="px-6 py-3">E-Mail</th>
@@ -118,8 +118,8 @@ export default function CustomersPage() {
               <tbody className="divide-y divide-gray-100">
                 {filtered.map((c) => (
                   <tr key={c.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-3 text-gray-500">{c.salutation ?? ""}</td>
-                    <td className="px-6 py-3 font-medium">{[c.firstName, c.name].filter(Boolean).join(" ")}</td>
+                    <td className="px-6 py-3 font-medium text-gray-900">{c.firstName ?? ""}</td>
+                    <td className="px-6 py-3 font-medium text-gray-900">{c.name}</td>
                     <td className="px-6 py-3 text-gray-500">{c.company}</td>
                     <td className="px-6 py-3 text-gray-500">{[c.zip, c.city].filter(Boolean).join(" ")}</td>
                     <td className="px-6 py-3 text-gray-500">{c.email}</td>
@@ -175,7 +175,7 @@ export default function CustomersPage() {
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Anrede</label>
                   <select
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold"
                     value={form.salutation ?? ""}
                     onChange={(e) => setForm({ ...form, salutation: e.target.value })}
                   >
@@ -188,7 +188,7 @@ export default function CustomersPage() {
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Vorname</label>
                   <input
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold"
                     value={form.firstName ?? ""}
                     onChange={(e) => setForm({ ...form, firstName: e.target.value })}
                   />
@@ -196,7 +196,7 @@ export default function CustomersPage() {
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Nachname *</label>
                   <input
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold"
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
                   />
@@ -205,7 +205,7 @@ export default function CustomersPage() {
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Firma</label>
                 <input
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold"
                   value={form.company}
                   onChange={(e) => setForm({ ...form, company: e.target.value })}
                 />
@@ -213,7 +213,7 @@ export default function CustomersPage() {
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Straße</label>
                 <input
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold"
                   value={form.street}
                   onChange={(e) => setForm({ ...form, street: e.target.value })}
                 />
@@ -222,7 +222,7 @@ export default function CustomersPage() {
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">PLZ</label>
                   <input
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold"
                     value={form.zip}
                     onChange={(e) => setForm({ ...form, zip: e.target.value })}
                   />
@@ -230,7 +230,7 @@ export default function CustomersPage() {
                 <div className="col-span-2">
                   <label className="block text-xs font-medium text-gray-600 mb-1">Ort</label>
                   <input
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold"
                     value={form.city}
                     onChange={(e) => setForm({ ...form, city: e.target.value })}
                   />
@@ -241,7 +241,7 @@ export default function CustomersPage() {
                   <label className="block text-xs font-medium text-gray-600 mb-1">E-Mail</label>
                   <input
                     type="email"
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold"
                     value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
                   />
@@ -249,7 +249,7 @@ export default function CustomersPage() {
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Telefon</label>
                   <input
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold"
                     value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
                   />
@@ -259,7 +259,7 @@ export default function CustomersPage() {
                 <label className="block text-xs font-medium text-gray-600 mb-1">Notizen</label>
                 <textarea
                   rows={3}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red resize-none"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold resize-none"
                   value={form.notes}
                   onChange={(e) => setForm({ ...form, notes: e.target.value })}
                 />
@@ -275,7 +275,7 @@ export default function CustomersPage() {
               <button
                 disabled={saveMutation.isPending || !form.name}
                 onClick={() => saveMutation.mutate(form)}
-                className="bg-brand-red text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-red-700 transition-colors disabled:opacity-60"
+                className="bg-brand-gold text-white px-5 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition-colors disabled:opacity-60"
               >
                 {saveMutation.isPending ? "Speichern..." : "Speichern"}
               </button>

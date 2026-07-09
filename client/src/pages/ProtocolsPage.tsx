@@ -26,6 +26,7 @@ export default function ProtocolsPage() {
   const [editing, setEditing] = useState<any>(null);
   const [emailTarget, setEmailTarget] = useState<any>(null);
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [search, setSearch] = useState("");
 
   // Form state
   const today = new Date().toISOString().split("T")[0];
@@ -129,23 +130,23 @@ export default function ProtocolsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Kunde</label>
-              <select className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red" value={customerId ?? ""} onChange={(e) => setCustomerId(e.target.value ? Number(e.target.value) : null)}>
+              <select className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold" value={customerId ?? ""} onChange={(e) => setCustomerId(e.target.value ? Number(e.target.value) : null)}>
                 <option value="">— Kein Kunde —</option>
                 {customers.map((c: any) => <option key={c.id} value={c.id}>{[c.firstName, c.name].filter(Boolean).join(" ")}{c.company ? ` (${c.company})` : ""}</option>)}
               </select>
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Datum *</label>
-              <input type="date" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red" value={date} onChange={(e) => setDate(e.target.value)} />
+              <input type="date" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold" value={date} onChange={(e) => setDate(e.target.value)} />
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Projektbeschreibung</label>
-              <input className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red" value={projectDescription} onChange={(e) => setProjectDescription(e.target.value)} />
+              <input className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold" value={projectDescription} onChange={(e) => setProjectDescription(e.target.value)} />
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Ort / Adresse</label>
               <div className="flex gap-2">
-                <input className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red" value={location} onChange={(e) => setLocation(e.target.value)} />
+                <input className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold" value={location} onChange={(e) => setLocation(e.target.value)} />
                 {customerId && (() => {
                   const c = customers.find((x: any) => x.id === customerId);
                   const addr = [c?.street, [c?.zip, c?.city].filter(Boolean).join(" ")].filter(Boolean).join(", ");
@@ -171,7 +172,7 @@ export default function ProtocolsPage() {
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
-              <select className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red" value={status} onChange={(e) => setStatus(e.target.value)}>
+              <select className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold" value={status} onChange={(e) => setStatus(e.target.value)}>
                 {Object.entries(STATUS_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
               </select>
             </div>
@@ -201,13 +202,13 @@ export default function ProtocolsPage() {
                     <tr key={i} className="hover:bg-gray-50">
                       <td className="px-3 py-1.5 text-center text-gray-400">{item.position}</td>
                       <td className="px-3 py-1.5">
-                        <input className="w-full border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-brand-red rounded px-1" value={item.description} onChange={(e) => updateItem(i, { description: e.target.value })} placeholder="Beschreibung..." />
+                        <input className="w-full border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-brand-gold rounded px-1" value={item.description} onChange={(e) => updateItem(i, { description: e.target.value })} placeholder="Beschreibung..." />
                       </td>
                       <td className="px-3 py-1.5 text-center">
-                        <input type="checkbox" className="accent-brand-red" checked={item.completed} onChange={(e) => updateItem(i, { completed: e.target.checked })} />
+                        <input type="checkbox" className="accent-brand-gold" checked={item.completed} onChange={(e) => updateItem(i, { completed: e.target.checked })} />
                       </td>
                       <td className="px-3 py-1.5">
-                        <input className="w-full border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-brand-red rounded px-1" value={item.notes} onChange={(e) => updateItem(i, { notes: e.target.value })} placeholder="Bemerkung..." />
+                        <input className="w-full border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-brand-gold rounded px-1" value={item.notes} onChange={(e) => updateItem(i, { notes: e.target.value })} placeholder="Bemerkung..." />
                       </td>
                       <td className="px-3 py-1.5">
                         <button onClick={() => removeItem(i)} className="text-red-400 hover:text-red-600">×</button>
@@ -227,21 +228,21 @@ export default function ProtocolsPage() {
                     <button onClick={() => removeItem(i)} className="text-red-400 hover:text-red-600 text-xl leading-none font-bold">×</button>
                   </div>
                   <input
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold"
                     value={item.description}
                     onChange={(e) => updateItem(i, { description: e.target.value })}
                     placeholder="Beschreibung..."
                   />
                   <div className="flex items-center gap-2">
                     <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
-                      <input type="checkbox" className="accent-brand-red w-4 h-4" checked={item.completed} onChange={(e) => updateItem(i, { completed: e.target.checked })} />
+                      <input type="checkbox" className="accent-brand-gold w-4 h-4" checked={item.completed} onChange={(e) => updateItem(i, { completed: e.target.checked })} />
                       Erledigt
                     </label>
                   </div>
                   <div>
                     <label className="text-xs text-gray-400 mb-1 block">Bemerkung</label>
                     <input
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red"
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold"
                       value={item.notes}
                       onChange={(e) => updateItem(i, { notes: e.target.value })}
                       placeholder="Bemerkung..."
@@ -251,7 +252,7 @@ export default function ProtocolsPage() {
               ))}
               <button
                 onClick={addItem}
-                className="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-sm text-gray-400 hover:border-brand-red hover:text-brand-red transition-colors"
+                className="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-sm text-gray-400 hover:border-brand-gold hover:text-brand-gold transition-colors"
               >
                 + Position hinzufügen
               </button>
@@ -260,16 +261,16 @@ export default function ProtocolsPage() {
 
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Mängel / Nachbesserungen</label>
-            <textarea rows={3} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red resize-none" value={defects} onChange={(e) => setDefects(e.target.value)} />
+            <textarea rows={3} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold resize-none" value={defects} onChange={(e) => setDefects(e.target.value)} />
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Anmerkungen</label>
-            <textarea rows={3} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red resize-none" value={notes} onChange={(e) => setNotes(e.target.value)} />
+            <textarea rows={3} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold resize-none" value={notes} onChange={(e) => setNotes(e.target.value)} />
           </div>
 
           <div className="flex justify-end gap-3 border-t border-gray-100 pt-4">
             <button onClick={() => { setView("list"); setEditing(null); resetForm(); }} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 border border-gray-300 rounded-lg">Abbrechen</button>
-            <button disabled={saveMutation.isPending || !date} onClick={handleSubmit} className="bg-brand-red text-white px-6 py-2 rounded-lg text-sm font-semibold hover:bg-red-700 disabled:opacity-60">
+            <button disabled={saveMutation.isPending || !date} onClick={handleSubmit} className="bg-brand-gold text-white px-6 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-60">
               {saveMutation.isPending ? "Speichern..." : "Speichern"}
             </button>
           </div>
@@ -291,9 +292,19 @@ export default function ProtocolsPage() {
         />
       )}
       <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-black text-gray-900">Abnahmeprotokolle</h1>
-        <button onClick={openCreate} className="bg-brand-red text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-700">+ Neues Protokoll</button>
+        <button onClick={openCreate} className="bg-brand-gold text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90">+ Neues Protokoll</button>
+      </div>
+
+      <div className="mb-4">
+        <input
+          type="search"
+          placeholder="Suchen nach Nummer, Projekt, Ort…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full md:w-80 border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-gold"
+        />
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -301,7 +312,19 @@ export default function ProtocolsPage() {
           <div className="p-8 text-center text-gray-400 text-sm">Laden...</div>
         ) : protocols.length === 0 ? (
           <div className="p-8 text-center text-gray-400 text-sm">Noch keine Protokolle.</div>
-        ) : (
+        ) : (() => {
+          const sl = search.toLowerCase();
+          const filtered = search
+            ? protocols.filter((p) =>
+                p.protocolNumber?.toLowerCase().includes(sl) ||
+                p.projectDescription?.toLowerCase().includes(sl) ||
+                p.location?.toLowerCase().includes(sl)
+              )
+            : protocols;
+          if (filtered.length === 0) return (
+            <div className="p-8 text-center text-gray-400 text-sm">Keine Treffer für „{search}".</div>
+          );
+          return (
           <>
             {/* Desktop table */}
             <table className="hidden md:table w-full text-sm">
@@ -316,7 +339,7 @@ export default function ProtocolsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {protocols.map((p) => (
+                {filtered.map((p) => (
                   <tr key={p.id} className="hover:bg-gray-50">
                     <td className="px-5 py-3 font-mono text-xs text-gray-700">{p.protocolNumber}</td>
                     <td className="px-5 py-3 text-gray-500">{new Intl.DateTimeFormat("de-DE").format(new Date(p.date))}</td>
@@ -348,7 +371,7 @@ export default function ProtocolsPage() {
 
             {/* Mobile cards */}
             <div className="md:hidden divide-y divide-gray-100">
-              {protocols.map((p) => (
+              {filtered.map((p) => (
                 <div key={p.id} className="p-4 space-y-2">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
@@ -379,7 +402,8 @@ export default function ProtocolsPage() {
               ))}
             </div>
           </>
-        )}
+          );
+        })()}
       </div>
     </div>
     </>

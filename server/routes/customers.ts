@@ -20,7 +20,25 @@ router.get("/", async (_req, res) => {
   try {
     const { db } = getDb();
     const rows = await (db as any).select().from(table()).orderBy(table().name);
-    res.json(rows);
+    
+    // PostgreSQL gibt snake_case zurück → manuell zu camelCase mappen
+    const mapped = rows.map((r: any) => ({
+      id: r.id,
+      salutation: r.salutation,
+      firstName: r.first_name ?? r.firstName, // PG: first_name, SQLite: firstName
+      name: r.name,
+      company: r.company,
+      street: r.street,
+      zip: r.zip,
+      city: r.city,
+      email: r.email,
+      phone: r.phone,
+      notes: r.notes,
+      createdAt: r.created_at ?? r.createdAt,
+      updatedAt: r.updated_at ?? r.updatedAt,
+    }));
+    
+    res.json(mapped);
   } catch (err) {
     console.error("[customers/list]", err);
     res.status(500).json({ error: "Interner Serverfehler" });
@@ -37,7 +55,25 @@ router.get("/:id", async (req, res) => {
       .where(eq(table().id, Number(req.params.id)))
       .limit(1);
     if (rows.length === 0) { res.status(404).json({ error: "Nicht gefunden" }); return; }
-    res.json(rows[0]);
+    
+    const r = rows[0];
+    const mapped = {
+      id: r.id,
+      salutation: r.salutation,
+      firstName: r.first_name ?? r.firstName,
+      name: r.name,
+      company: r.company,
+      street: r.street,
+      zip: r.zip,
+      city: r.city,
+      email: r.email,
+      phone: r.phone,
+      notes: r.notes,
+      createdAt: r.created_at ?? r.createdAt,
+      updatedAt: r.updated_at ?? r.updatedAt,
+    };
+    
+    res.json(mapped);
   } catch (err) {
     console.error("[customers/get]", err);
     res.status(500).json({ error: "Interner Serverfehler" });

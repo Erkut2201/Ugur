@@ -1,14 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <!-- Orange background -->
-  <rect width="32" height="32" rx="5" fill="#E55300"/>
+  <!-- Dark background matching brand #1a1a1a -->
+  <rect width="32" height="32" rx="5" fill="#1a1a1a"/>
 
-  <!-- Left post -->
-  <rect x="5" y="14" width="3" height="13" rx="1" fill="white"/>
-  <!-- Right post -->
-  <rect x="24" y="14" width="3" height="13" rx="1" fill="white"/>
+  <!-- Gold separator line (top accent) -->
+  <rect x="4" y="4" width="24" height="1.5" rx="0.75" fill="#C8A96E"/>
 
-  <!-- Pergola slats (Lamellen) across the top -->
-  <rect x="3" y="6"  width="26" height="2.5" rx="1.2" fill="white"/>
-  <rect x="3" y="10" width="26" height="2.5" rx="1.2" fill="white"/>
-  <rect x="3" y="14" width="26" height="2.5" rx="1.2" fill="white"/>
+  <!-- "A" letter -->
+  <!-- Left leg -->
+  <polygon points="7,26 10.5,8 12,8 8.5,26" fill="#C8A96E"/>
+  <!-- Right leg -->
+  <polygon points="13.5,26 10.5,8 12,8 15,26" fill="#C8A96E"/>
+  <!-- Crossbar -->
+  <rect x="8.2" y="18.5" width="5.4" height="1.8" rx="0.5" fill="#C8A96E"/>
+
+  <!-- "C" letter -->
+  <!-- Outer arc approximated with paths -->
+  <path d="M21,8 C17.5,8 15.5,11.5 15.5,16 C15.5,20.5 17.5,24 21,24 L23,24 L23,22 L21,22 C18.8,22 17.5,19.4 17.5,16 C17.5,12.6 18.8,10 21,10 L23,10 L23,8 Z" fill="#C8A96E"/>
+
+  <!-- Gold separator line (bottom accent) -->
+  <rect x="4" y="26.5" width="24" height="1.5" rx="0.75" fill="#C8A96E" opacity="0.6"/>
 </svg>

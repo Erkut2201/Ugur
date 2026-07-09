@@ -2,8 +2,39 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ====== Aufmaßblatt Print ====== */
+@page {
+  size: A4 portrait;
+  margin: 15mm;
+}
+@media print {
+  body > #root > * {
+    display: none !important;
+  }
+  #aufmass-print-wrapper {
+    display: block !important;
+  }
+  #aufmass-form {
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    min-height: unset !important;
+    width: 100%;
+  }
+  #aufmass-form textarea {
+    border: 1px solid #999 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  #aufmass-form input {
+    border-bottom: 1px solid #999 !important;
+  }
+  .aufmass-toolbar {
+    display: none !important;
+  }
+}
+
 :root {
-  color-scheme: dark;
   --gold: #C8A96E;
   --dark: #1a1a1a;
 }
@@ -41,6 +72,19 @@
   textarea,
   select {
     font: inherit;
+  }
+
+  /* Form controls always use dark text on white background */
+  input,
+  textarea,
+  select {
+    color: #111827;
+    background-color: #ffffff;
+  }
+
+  /* Prevent dark-mode color-scheme from making select-option text invisible */
+  select {
+    color-scheme: light;
   }
 
   #root {

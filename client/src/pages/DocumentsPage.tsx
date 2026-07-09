@@ -91,11 +91,11 @@ export default function DocumentsPage() {
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Empfänger *</label>
-              <input type="email" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red" value={emailTo} onChange={(e) => setEmailTo(e.target.value)} />
+              <input type="email" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold" value={emailTo} onChange={(e) => setEmailTo(e.target.value)} />
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Nachricht</label>
-              <textarea rows={10} className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red resize-y" value={emailMsg} onChange={(e) => setEmailMsg(e.target.value)} placeholder={`Sehr geehrte Damen und Herren,\n\nanbei finden Sie ${TYPE_LABELS[emailTarget.docType] ?? ""} ${emailTarget.number}.\n\nMit freundlichen Grüßen`} />
+              <textarea rows={10} className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold resize-y" value={emailMsg} onChange={(e) => setEmailMsg(e.target.value)} placeholder={`Sehr geehrte Damen und Herren,\n\nanbei finden Sie ${TYPE_LABELS[emailTarget.docType] ?? ""} ${emailTarget.number}.\n\nMit freundlichen Grüßen`} />
             </div>
             <div className="flex justify-between items-center pt-1 gap-3">
               <button onClick={() => setEmailMsg("")} className="text-xs text-gray-400 hover:text-gray-600">Leeren</button>
@@ -104,7 +104,7 @@ export default function DocumentsPage() {
                 <button
                   disabled={!emailTo || emailMutation.isPending}
                   onClick={() => emailMutation.mutate({ doc: emailTarget, to: emailTo, message: emailMsg })}
-                  className="bg-brand-red text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-red-700 disabled:opacity-60"
+                  className="bg-brand-gold text-white px-5 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-60"
                 >
                   {emailMutation.isPending ? "Senden..." : "📧 Senden"}
                 </button>
@@ -119,8 +119,8 @@ export default function DocumentsPage() {
               </div>
               <div className="divide-y divide-gray-100">
                 {templates.map((t) => (
-                  <button key={t.id} onClick={() => setEmailMsg((prev) => prev ? prev + "\n\n" + t.text : t.text)} className="w-full text-left px-4 py-3 hover:bg-brand-red/5 group transition-colors">
-                    <div className="text-sm font-medium text-gray-800 group-hover:text-brand-red">{t.label}</div>
+                  <button key={t.id} onClick={() => setEmailMsg((prev) => prev ? prev + "\n\n" + t.text : t.text)} className="w-full text-left px-4 py-3 hover:bg-brand-gold/5 group transition-colors">
+                    <div className="text-sm font-medium text-gray-800 group-hover:text-brand-gold">{t.label}</div>
                     <div className="text-xs text-gray-400 mt-0.5 line-clamp-2">{t.text.substring(0, 60)}…</div>
                   </button>
                 ))}
@@ -142,12 +142,12 @@ export default function DocumentsPage() {
           placeholder="Suchen..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-48 focus:outline-none focus:ring-2 focus:ring-brand-red"
+          className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-48 focus:outline-none focus:ring-2 focus:ring-brand-gold"
         />
         <select
           value={typeFilter}
           onChange={(e) => setTypeFilter(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red"
+          className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold"
         >
           <option value="">Alle Typen</option>
           <option value="quote">Angebote</option>
@@ -194,7 +194,7 @@ export default function DocumentsPage() {
                     <td className="px-5 py-3 text-gray-700 max-w-[180px] truncate">
                       {doc.projectDescription ?? "—"}
                     </td>
-                    <td className="px-5 py-3 text-right font-medium">
+                    <td className="px-5 py-3 text-right font-medium text-gray-900">
                       {doc.total != null
                         ? `${parseFloat(doc.total).toLocaleString("de-DE", { minimumFractionDigits: 2 })} €`
                         : "—"}

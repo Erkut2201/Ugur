@@ -1,8 +1,22 @@
 import { useState } from "react";
 import { ApiError } from "../../lib/api.js";
 
+function getPublicApiBaseUrl() {
+  return import.meta.env.VITE_PUBLIC_API_BASE_URL?.trim() ?? "";
+}
+
+function buildPublicApiUrl(path: string) {
+  const baseUrl = getPublicApiBaseUrl();
+  if (!baseUrl) return path;
+  return `${baseUrl.replace(/\/$/, "")}${path}`;
+}
+
+function getRequestCredentials(): RequestCredentials {
+  return getPublicApiBaseUrl() ? "include" : "same-origin";
+}
+
 async function fetchCsrfToken(): Promise<string> {
-  const res = await fetch("/api/csrf-token", { credentials: "include" });
+  const res = await fetch(buildPublicApiUrl("/api/csrf-token"), { credentials: getRequestCredentials() });
   if (!res.ok) throw new Error("CSRF-Token konnte nicht abgerufen werden.");
   const data = await res.json();
   return data.csrfToken as string;
@@ -20,10 +34,10 @@ export function useInquiryForm() {
 
     try {
       const csrfToken = await fetchCsrfToken();
-      const response = await fetch(path, {
+      const response = await fetch(buildPublicApiUrl(path), {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-csrf-token": csrfToken },
-        credentials: "include",
+        credentials: getRequestCredentials(),
         body: JSON.stringify(payload),
       });
 
@@ -49,10 +63,10 @@ export function useInquiryForm() {
 
     try {
       const csrfToken = await fetchCsrfToken();
-      const response = await fetch(path, {
+      const response = await fetch(buildPublicApiUrl(path), {
         method: "POST",
         headers: { "x-csrf-token": csrfToken },
-        credentials: "include",
+        credentials: getRequestCredentials(),
         body: formData,
       });
 

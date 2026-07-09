@@ -1,6 +1,6 @@
 export const actionsPage = {
   eyebrow: "Aktionen",
-  title: "Frühlingszauber bei Konzept Terrasse!",
+  title: "Frühlingszauber bei AC Premium Bau!",
   description:
     "Aktionsfläche für saisonale Kampagnen, Preisvorteile und aufmerksamkeitsstarke Angebotskommunikation.",
 };

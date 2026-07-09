@@ -95,8 +95,8 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
           <Link href="/">
             <a className="flex items-end gap-1 select-none">
               <div className="leading-none">
-                <div className="text-base font-bold tracking-tight text-white">Konzept</div>
-                <div className="text-base font-bold tracking-tight text-brand-gold">Terrasse</div>
+                <div className="text-base font-bold tracking-tight text-white">AC Premium</div>
+                <div className="text-base font-bold tracking-tight text-brand-gold">Bau</div>
               </div>
             </a>
           </Link>
@@ -257,8 +257,8 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       <footer className="border-t border-brand-gold/15 bg-black">
         <div className="mx-auto grid max-w-7xl gap-10 px-6 py-14 md:grid-cols-4">
           <div>
-            <div className="mb-1 text-lg font-bold text-white">Konzept</div>
-            <div className="mb-4 text-lg font-bold text-brand-gold">Terrasse</div>
+            <div className="mb-1 text-lg font-bold text-white">AC Premium</div>
+            <div className="mb-4 text-lg font-bold text-brand-gold">Bau</div>
             <p className="text-sm leading-6 text-gray-500">{t.footer.brandText}</p>
           </div>
           <div>
@@ -279,6 +279,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
               <li><Link href="/kontakt"><a className="text-gray-500 hover:text-brand-gold transition-colors">Kontakt</a></Link></li>
               <li><Link href="/impressum"><a className="text-gray-500 hover:text-brand-gold transition-colors">Impressum</a></Link></li>
               <li><Link href="/datenschutz"><a className="text-gray-500 hover:text-brand-gold transition-colors">Datenschutz</a></Link></li>
+              <li><Link href="/agb"><a className="text-gray-500 hover:text-brand-gold transition-colors">AGB</a></Link></li>
             </ul>
           </div>
           <div>
@@ -296,7 +297,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
         </div>
         <div className="border-t border-white/5 py-5">
           <p className="text-center text-xs text-gray-700">
-            © {new Date().getFullYear()} {company?.name ?? "Konzept Terrasse"} · {t.footer.copyright}
+            © {new Date().getFullYear()} {company?.name ?? "AC Premium Bau"} · {t.footer.copyright}
           </p>
         </div>
       </footer>

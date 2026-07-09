@@ -11,6 +11,8 @@ const nav = [
   { href: "/invoices", label: "Rechnungen", icon: "🧾" },
   { href: "/protocols", label: "Abnahmeprotokolle", icon: "✅" },
   { href: "/services", label: "Leistungskatalog", icon: "🔧" },
+  { href: "/catalog", label: "Produktkatalog", icon: "🗂️" },
+  { href: "/aufmass", label: "Notizen", icon: "📐" },
   { href: "/documents", label: "Dokumentenarchiv", icon: "📁" },
 ];
 
@@ -38,8 +40,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         {/* Logo area */}
         <div className="p-5 border-b border-gray-700 flex items-start justify-between">
           <div>
-            <div className="text-brand-red font-black text-lg leading-tight">KONZEPT</div>
-            <div className="font-bold text-white text-xl">Terrasse BW</div>
+            <div className="text-brand-gold font-black text-lg leading-tight">AC PREMIUM</div>
+            <div className="font-bold text-white text-xl">Bau</div>
             <div className="text-xs text-gray-400 mt-1">Büroverwaltung</div>
           </div>
           <button
@@ -64,7 +66,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   onClick={() => setMenuOpen(false)}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                     isActive
-                      ? "bg-brand-red text-white"
+                      ? "bg-brand-gold text-white"
                       : "text-gray-300 hover:bg-gray-700 hover:text-white"
                   }`}
                 >
@@ -104,7 +106,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </header>
 
         {/* Main content */}
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 overflow-auto bg-gray-50">
           <div className="max-w-6xl mx-auto p-4 md:p-8">{children}</div>
         </main>
       </div>

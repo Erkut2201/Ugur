@@ -125,7 +125,7 @@ export default function EmailDialog({ open, onClose, docType, docId, docNumber, 
                   type="email"
                   value={to}
                   onChange={(e) => setTo(e.target.value)}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent transition"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold focus:border-transparent transition"
                   placeholder="empfaenger@beispiel.de"
                 />
               </div>
@@ -139,7 +139,7 @@ export default function EmailDialog({ open, onClose, docType, docId, docNumber, 
                   type="text"
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent transition"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold focus:border-transparent transition"
                 />
               </div>
 
@@ -152,7 +152,7 @@ export default function EmailDialog({ open, onClose, docType, docId, docNumber, 
                   value={body}
                   onChange={(e) => setBody(e.target.value)}
                   rows={11}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent transition resize-y font-mono leading-relaxed"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold focus:border-transparent transition resize-y font-mono leading-relaxed"
                 />
               </div>
 
@@ -184,7 +184,7 @@ export default function EmailDialog({ open, onClose, docType, docId, docNumber, 
                 <button
                   onClick={() => sendMutation.mutate()}
                   disabled={!to.trim() || sendMutation.isPending}
-                  className="px-5 py-2 bg-brand-red text-white text-sm font-semibold rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                  className="px-5 py-2 bg-brand-gold text-white text-sm font-semibold rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition"
                 >
                   {sendMutation.isPending ? "Wird versendet…" : "E-Mail senden"}
                 </button>

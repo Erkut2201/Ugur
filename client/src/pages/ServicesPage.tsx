@@ -121,13 +121,13 @@ export default function ServicesPage() {
       <div className="md:hidden flex border-b border-gray-200 mb-4">
         <button
           onClick={() => setActiveTab("services")}
-          className={`flex-1 py-2.5 text-sm font-semibold text-center transition-colors ${activeTab === "services" ? "text-brand-red border-b-2 border-brand-red" : "text-gray-400"}`}
+          className={`flex-1 py-2.5 text-sm font-semibold text-center transition-colors ${activeTab === "services" ? "text-brand-gold border-b-2 border-brand-gold" : "text-gray-400"}`}
         >
           🔧 Leistungen
         </button>
         <button
           onClick={() => setActiveTab("units")}
-          className={`flex-1 py-2.5 text-sm font-semibold text-center transition-colors ${activeTab === "units" ? "text-brand-red border-b-2 border-brand-red" : "text-gray-400"}`}
+          className={`flex-1 py-2.5 text-sm font-semibold text-center transition-colors ${activeTab === "units" ? "text-brand-gold border-b-2 border-brand-gold" : "text-gray-400"}`}
         >
           📐 Einheiten
         </button>
@@ -140,7 +140,7 @@ export default function ServicesPage() {
             <h1 className="text-2xl font-black text-gray-900">Leistungskatalog</h1>
             <button
               onClick={openCreate}
-              className="bg-brand-red text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-700"
+              className="bg-brand-gold text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90"
             >
               + Neue Leistung
             </button>
@@ -152,13 +152,13 @@ export default function ServicesPage() {
               placeholder="Suchen..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm flex-1 min-w-0 focus:outline-none focus:ring-2 focus:ring-brand-red"
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm flex-1 min-w-0 focus:outline-none focus:ring-2 focus:ring-brand-gold"
             />
             {categories.length > 0 && (
               <select
                 value={filterCategory}
                 onChange={(e) => setFilterCategory(e.target.value)}
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red"
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold"
               >
                 <option value="">Alle Kategorien</option>
                 {categories.map((c) => (
@@ -182,7 +182,7 @@ export default function ServicesPage() {
               </div>
               <button
                 onClick={openCreate}
-                className="mt-4 bg-brand-red text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-700"
+                className="mt-4 bg-brand-gold text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90"
               >
                 + Erste Leistung anlegen
               </button>
@@ -216,7 +216,7 @@ export default function ServicesPage() {
                               {s.notes && <div className="text-xs text-gray-400 truncate">{s.notes}</div>}
                             </td>
                             <td className="px-5 py-3 text-center text-gray-600">{s.unit}</td>
-                            <td className="px-5 py-3 text-right font-medium">
+                            <td className="px-5 py-3 text-right font-medium text-gray-900">
                               {Number(s.unitPrice).toLocaleString("de-DE", { minimumFractionDigits: 2 })} €
                             </td>
                             <td className="px-5 py-3">
@@ -297,12 +297,12 @@ export default function ServicesPage() {
                 placeholder="Neue Einheit..."
                 value={newUnit}
                 onChange={(e) => setNewUnit(e.target.value)}
-                className="flex-1 min-w-0 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red"
+                className="flex-1 min-w-0 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold"
               />
               <button
                 type="submit"
                 disabled={!newUnit.trim() || addUnitMutation.isPending}
-                className="bg-brand-red text-white rounded-lg px-3 py-2 text-sm font-bold hover:bg-red-700 disabled:opacity-50"
+                className="bg-brand-gold text-white rounded-lg px-3 py-2 text-sm font-bold hover:opacity-90 disabled:opacity-50"
               >
                 +
               </button>
@@ -324,7 +324,7 @@ export default function ServicesPage() {
                   Bezeichnung *
                 </label>
                 <input
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold"
                   value={form.name}
                   onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                   placeholder="z.B. Tischlerarbeit Schrank"
@@ -336,7 +336,7 @@ export default function ServicesPage() {
                 </label>
                 <textarea
                   rows={3}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red resize-none"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold resize-none"
                   value={form.description}
                   onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                   placeholder="Vollständige Beschreibung der Leistung..."
@@ -348,7 +348,7 @@ export default function ServicesPage() {
                     Einheit *
                   </label>
                   <select
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold"
                     value={unitOptions.some((u) => u.name === form.unit) ? form.unit : "__custom__"}
                     onChange={(e) => {
                       if (e.target.value !== "__custom__") setForm((f) => ({ ...f, unit: e.target.value }));
@@ -361,7 +361,7 @@ export default function ServicesPage() {
                   </select>
                   {/* Free-text fallback for custom units */}
                   <input
-                    className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-1.5 text-xs text-gray-600 focus:outline-none focus:ring-1 focus:ring-brand-red"
+                    className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-1.5 text-xs text-gray-600 focus:outline-none focus:ring-1 focus:ring-brand-gold"
                     placeholder="Oder eigene Einheit eingeben (wird zum Katalog hinzugefügt)"
                     value={unitOptions.some((u) => u.name === form.unit) ? "" : form.unit}
                     onChange={(e) => setForm((f) => ({ ...f, unit: e.target.value }))}
@@ -373,9 +373,8 @@ export default function ServicesPage() {
                   </label>
                   <input
                     type="number"
-                    min={0}
                     step={0.01}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold"
                     value={form.unitPrice}
                     onChange={(e) => setForm((f) => ({ ...f, unitPrice: Number(e.target.value) }))}
                   />
@@ -387,7 +386,7 @@ export default function ServicesPage() {
                 </label>
                 <input
                   list="categories-list"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold"
                   value={form.category}
                   onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
                   placeholder="z.B. Tischlerarbeiten, Planungsleistungen..."
@@ -402,7 +401,7 @@ export default function ServicesPage() {
                 </label>
                 <textarea
                   rows={2}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red resize-none"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold resize-none"
                   value={form.notes}
                   onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
                 />
@@ -418,7 +417,7 @@ export default function ServicesPage() {
               <button
                 disabled={saveMutation.isPending || !form.name.trim() || !form.unit.trim()}
                 onClick={() => saveMutation.mutate(form)}
-                className="bg-brand-red text-white px-6 py-2 rounded-lg text-sm font-semibold hover:bg-red-700 disabled:opacity-60"
+                className="bg-brand-gold text-white px-6 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-60"
               >
                 {saveMutation.isPending ? "Speichern..." : "Speichern"}
               </button>

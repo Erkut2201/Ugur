@@ -24,12 +24,14 @@ router.use(requireAuth);
 const DEFAULT_SUBJECT: Record<string, string> = {
   quote: "Ihr Angebot {{nummer}} – {{firma}}",
   invoice: "Ihre Rechnung {{nummer}} – {{firma}}",
+  invoice_down_payment: "Ihre Anzahlungsrechnung {{nummer}} – {{firma}}",
+  invoice_final: "Ihre finale Rechnung {{nummer}} – {{firma}}",
   protocol: "Ihr Abnahmeprotokoll {{nummer}} – {{firma}}",
 };
 
 const DEFAULT_BODY: Record<string, string> = {
   quote: [
-    "Sehr geehrte/r {{anrede}},",
+    "{{anrede}},",
     "",
     "vielen Dank für Ihr Interesse an unseren Produkten und Dienstleistungen.",
     "",
@@ -44,7 +46,7 @@ const DEFAULT_BODY: Record<string, string> = {
   ].join("\n"),
 
   invoice: [
-    "Sehr geehrte/r {{anrede}},",
+    "{{anrede}},",
     "",
     "vielen Dank für Ihren Auftrag.",
     "",
@@ -58,8 +60,38 @@ const DEFAULT_BODY: Record<string, string> = {
     "{{ansprechpartner}}",
   ].join("\n"),
 
+  invoice_down_payment: [
+    "{{anrede}},",
+    "",
+    "vielen Dank für Ihren Auftrag.",
+    "",
+    "anbei übersenden wir Ihnen unsere Anzahlungsrechnung {{nummer}} vom {{datum}} über {{betrag}}.",
+    "",
+    "Bitte überweisen Sie den ausgewiesenen Anzahlungsbetrag innerhalb der angegebenen Zahlungsfrist auf das im Dokument genannte Konto.",
+    "",
+    "Bei Fragen zur Rechnung stehen wir Ihnen selbstverständlich gerne zur Verfügung.",
+    "",
+    "Mit freundlichen Grüßen",
+    "{{ansprechpartner}}",
+  ].join("\n"),
+
+  invoice_final: [
+    "{{anrede}},",
+    "",
+    "vielen Dank für Ihren Auftrag und das entgegengebrachte Vertrauen.",
+    "",
+    "anbei übersenden wir Ihnen unsere finale Rechnung {{nummer}} vom {{datum}} über {{betrag}}.",
+    "",
+    "Bitte überweisen Sie den offenen Rechnungsbetrag innerhalb der angegebenen Zahlungsfrist auf das im Dokument genannte Konto.",
+    "",
+    "Bei Fragen zur Rechnung stehen wir Ihnen selbstverständlich gerne zur Verfügung.",
+    "",
+    "Mit freundlichen Grüßen",
+    "{{ansprechpartner}}",
+  ].join("\n"),
+
   protocol: [
-    "Sehr geehrte/r {{anrede}},",
+    "{{anrede}},",
     "",
     "anbei erhalten Sie das Abnahmeprotokoll {{nummer}} vom {{datum}} für Ihr Projekt.",
     "",
@@ -74,6 +106,12 @@ const DEFAULT_BODY: Record<string, string> = {
 
 function applyVars(template: string, vars: Record<string, string>): string {
   return template.replace(/\{\{(\w+)\}\}/g, (_, key) => vars[key] ?? "");
+}
+
+function getInvoiceTemplateKey(invoiceType: string | null | undefined): "invoice" | "invoice_down_payment" | "invoice_final" {
+  if (invoiceType === "down_payment") return "invoice_down_payment";
+  if (invoiceType === "final") return "invoice_final";
+  return "invoice";
 }
 
 function buildSignatureText(): string {
@@ -120,6 +158,7 @@ router.get("/:type/:docId", async (req, res) => {
     let docDate = "";
     let docTotal: string | null = null;
     let customerId: number | null = null;
+    let templateKey: "quote" | "invoice" | "invoice_down_payment" | "invoice_final" | "protocol" = type as any;
 
     if (type === "quote") {
       const tbl = USE_POSTGRES ? quotesTable : quotesTableSQLite;
@@ -130,6 +169,7 @@ router.get("/:type/:docId", async (req, res) => {
       docDate = doc.date ?? "";
       docTotal = doc.total ?? null;
       customerId = doc.customerId ?? null;
+      templateKey = "quote";
     } else if (type === "invoice") {
       const tbl = USE_POSTGRES ? invoicesTable : invoicesTableSQLite;
       const rows = await db.select().from(tbl).where(eq(tbl.id, id)).limit(1);
@@ -139,6 +179,7 @@ router.get("/:type/:docId", async (req, res) => {
       docDate = doc.date ?? "";
       docTotal = doc.total ?? null;
       customerId = doc.customerId ?? null;
+      templateKey = getInvoiceTemplateKey(doc.invoiceType);
     } else {
       const tbl = USE_POSTGRES ? protocolsTable : protocolsTableSQLite;
       const rows = await db.select().from(tbl).where(eq(tbl.id, id)).limit(1);
@@ -147,6 +188,7 @@ router.get("/:type/:docId", async (req, res) => {
       docNumber = doc.protocolNumber ?? "";
       docDate = doc.date ?? "";
       customerId = doc.customerId ?? null;
+      templateKey = "protocol";
     }
 
     let customerEmail = "";
@@ -169,11 +211,10 @@ router.get("/:type/:docId", async (req, res) => {
     const firma = e.COMPANY_NAME ?? "";
     const ansprechpartner = e.COMPANY_CONTACT_PERSON ?? firma;
 
-    // Build polite salutation
-    let anrede = "Damen und Herren";
+    let anrede = "Sehr geehrte Damen und Herren";
     const lastName = customerName.split(" ").pop() ?? "";
-    if (salutation?.toLowerCase() === "herr") anrede = `Herr ${lastName}`;
-    else if (salutation?.toLowerCase() === "frau") anrede = `Frau ${lastName}`;
+    if (salutation?.toLowerCase() === "herr" && lastName) anrede = `Sehr geehrter Herr ${lastName}`;
+    else if (salutation?.toLowerCase() === "frau" && lastName) anrede = `Sehr geehrte Frau ${lastName}`;
 
     const dateFormatted = docDate
       ? new Date(docDate).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" })
@@ -192,9 +233,10 @@ router.get("/:type/:docId", async (req, res) => {
       ansprechpartner,
     };
 
-    const envKeyUpper = type.toUpperCase();
-    const rawSubject = (e as any)[`EMAIL_TEMPLATE_${envKeyUpper}_SUBJECT`] ?? DEFAULT_SUBJECT[type];
-    const rawBody = (e as any)[`EMAIL_TEMPLATE_${envKeyUpper}_BODY`] ?? DEFAULT_BODY[type];
+    const envKeyUpper = templateKey.toUpperCase();
+    const fallbackKey = type;
+    const rawSubject = (e as any)[`EMAIL_TEMPLATE_${envKeyUpper}_SUBJECT`] ?? DEFAULT_SUBJECT[templateKey] ?? DEFAULT_SUBJECT[fallbackKey];
+    const rawBody = (e as any)[`EMAIL_TEMPLATE_${envKeyUpper}_BODY`] ?? DEFAULT_BODY[templateKey] ?? DEFAULT_BODY[fallbackKey];
 
     res.json({
       subject: applyVars(rawSubject, vars),

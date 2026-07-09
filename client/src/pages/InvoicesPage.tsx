@@ -24,6 +24,7 @@ export default function InvoicesPage() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [emailTarget, setEmailTarget] = useState<any>(null);
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [search, setSearch] = useState("");
 
   const { data: invoices = [], isLoading } = useQuery<any[]>({
     queryKey: ["/api/invoices"],
@@ -132,11 +133,21 @@ export default function InvoicesPage() {
         />
       )}
       <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-black text-gray-900">Rechnungen</h1>
-        <button onClick={() => { setEditing(null); setEditingId(null); setView("form"); }} className="bg-brand-red text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-700">
+        <button onClick={() => { setEditing(null); setEditingId(null); setView("form"); }} className="bg-brand-gold text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90">
           + Neue Rechnung
         </button>
+      </div>
+
+      <div className="mb-4">
+        <input
+          type="search"
+          placeholder="Suchen nach Nummer, Projekt…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full md:w-80 border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-gold"
+        />
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -144,7 +155,18 @@ export default function InvoicesPage() {
           <div className="p-8 text-center text-gray-400 text-sm">Laden...</div>
         ) : invoices.length === 0 ? (
           <div className="p-8 text-center text-gray-400 text-sm">Noch keine Rechnungen.</div>
-        ) : (
+        ) : (() => {
+          const sl = search.toLowerCase();
+          const filtered = search
+            ? invoices.filter((inv) =>
+                inv.invoiceNumber?.toLowerCase().includes(sl) ||
+                inv.projectDescription?.toLowerCase().includes(sl)
+              )
+            : invoices;
+          if (filtered.length === 0) return (
+            <div className="p-8 text-center text-gray-400 text-sm">Keine Treffer für „{search}".</div>
+          );
+          return (
           <>
             {/* Desktop table */}
             <table className="hidden md:table w-full text-sm">
@@ -159,10 +181,13 @@ export default function InvoicesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {invoices.map((inv) => (
+                {filtered.map((inv) => (
                   <tr key={inv.id} className="hover:bg-gray-50">
                     <td className="px-5 py-3">
                       <div className="font-mono text-xs text-gray-700">{inv.invoiceNumber}</div>
+                      <div className="mt-1 text-[10px] font-semibold text-gray-500 uppercase tracking-wide">
+                        {inv.invoiceType === "down_payment" ? "Anzahlungsrechnung" : inv.invoiceType === "final" ? "Finale Rechnung" : "Standardrechnung"}
+                      </div>
                       {inv.linkedProtocolNumber && (
                         <button
                           onClick={() => navigate("/protocols")}
@@ -176,7 +201,7 @@ export default function InvoicesPage() {
                     </td>
                     <td className="px-5 py-3 text-gray-500">{new Intl.DateTimeFormat("de-DE").format(new Date(inv.date))}</td>
                     <td className="px-5 py-3 text-gray-500">{inv.dueDate ? new Intl.DateTimeFormat("de-DE").format(new Date(inv.dueDate)) : "—"}</td>
-                    <td className="px-5 py-3 text-right font-medium">{parseFloat(inv.total).toLocaleString("de-DE", { minimumFractionDigits: 2 })} €</td>
+                    <td className="px-5 py-3 text-right font-medium text-gray-900">{parseFloat(inv.total).toLocaleString("de-DE", { minimumFractionDigits: 2 })} €</td>
                     <td className="px-5 py-3">
                       <select
                         value={inv.status}
@@ -197,12 +222,16 @@ export default function InvoicesPage() {
                         )}
                         <button onClick={() => window.open(`/api/invoices/${inv.id}/pdf/${inv.invoiceNumber}.pdf`, "_blank")} className="text-xs text-gray-600 hover:underline">PDF</button>
                         <button onClick={() => openEmail(inv)} className="text-xs text-gray-600 hover:underline">E-Mail</button>
-                        {inv.linkedProtocolNumber ? (
-                          <span className="text-xs text-emerald-600 font-medium cursor-default" title={`Protokoll ${inv.linkedProtocolNumber} bereits erstellt`}>✓ Protokoll</span>
+                        {inv.canCreateProtocol ? (
+                          inv.linkedProtocolNumber ? (
+                            <span className="text-xs text-emerald-600 font-medium cursor-default" title={`Protokoll ${inv.linkedProtocolNumber} bereits erstellt`}>✓ Protokoll</span>
+                          ) : (
+                            <button onClick={() => { if (confirm("Abnahmeprotokoll aus dieser Rechnung erstellen?")) fromInvoiceMutation.mutate(inv.id); }} className="text-xs text-green-600 hover:underline">→ Protokoll</button>
+                          )
                         ) : (
-                          <button onClick={() => { if (confirm("Abnahmeprotokoll aus dieser Rechnung erstellen?")) fromInvoiceMutation.mutate(inv.id); }} className="text-xs text-green-600 hover:underline">→ Protokoll</button>
+                          <span className="text-xs text-gray-400 italic">kein Protokoll</span>
                         )}
-                        {!["sent", "paid", "overdue"].includes(inv.status) && (
+                        {! ["sent", "paid", "overdue"].includes(inv.status) && (
                           <button onClick={() => { if (confirm(`Rechnung ${inv.invoiceNumber} löschen?`)) deleteMutation.mutate(inv.id); }} className="text-xs text-red-600 hover:underline">Löschen</button>
                         )}
                       </div>
@@ -214,11 +243,14 @@ export default function InvoicesPage() {
 
             {/* Mobile cards */}
             <div className="md:hidden divide-y divide-gray-100">
-              {invoices.map((inv) => (
+              {filtered.map((inv) => (
                 <div key={inv.id} className="p-4 space-y-2">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <div className="font-mono text-xs font-bold text-gray-800">{inv.invoiceNumber}</div>
+                      <div className="mt-1 text-[10px] font-semibold text-gray-500 uppercase tracking-wide">
+                        {inv.invoiceType === "down_payment" ? "Anzahlungsrechnung" : inv.invoiceType === "final" ? "Finale Rechnung" : "Standardrechnung"}
+                      </div>
                       {inv.linkedProtocolNumber && (
                         <button
                           onClick={() => navigate("/protocols")}
@@ -253,12 +285,16 @@ export default function InvoicesPage() {
                     )}
                     <button onClick={() => window.open(`/api/invoices/${inv.id}/pdf/${inv.invoiceNumber}.pdf`, "_blank")} className="text-xs text-gray-600 hover:underline">PDF</button>
                     <button onClick={() => openEmail(inv)} className="text-xs text-gray-600 hover:underline">E-Mail</button>
-                    {inv.linkedProtocolNumber ? (
-                      <span className="text-xs text-emerald-600 font-medium">✓ Protokoll</span>
+                    {inv.canCreateProtocol ? (
+                      inv.linkedProtocolNumber ? (
+                        <span className="text-xs text-emerald-600 font-medium">✓ Protokoll</span>
+                      ) : (
+                        <button onClick={() => { if (confirm("Abnahmeprotokoll aus dieser Rechnung erstellen?")) fromInvoiceMutation.mutate(inv.id); }} className="text-xs text-green-600 hover:underline">→ Protokoll</button>
+                      )
                     ) : (
-                      <button onClick={() => { if (confirm("Abnahmeprotokoll aus dieser Rechnung erstellen?")) fromInvoiceMutation.mutate(inv.id); }} className="text-xs text-green-600 hover:underline">→ Protokoll</button>
+                      <span className="text-xs text-gray-400 italic">kein Protokoll</span>
                     )}
-                    {!["sent", "paid", "overdue"].includes(inv.status) && (
+                    {! ["sent", "paid", "overdue"].includes(inv.status) && (
                       <button onClick={() => { if (confirm(`Rechnung ${inv.invoiceNumber} löschen?`)) deleteMutation.mutate(inv.id); }} className="text-xs text-red-600 hover:underline">Löschen</button>
                     )}
                   </div>
@@ -266,7 +302,8 @@ export default function InvoicesPage() {
               ))}
             </div>
           </>
-        )}
+          );
+        })()}
       </div>
     </div>
     </>

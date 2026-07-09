@@ -86,10 +86,22 @@ export async function readImageAsBase64(filePath: string): Promise<string> {
   // Supports local file paths (relative to project root) or returns empty string on error
   try {
     const resolved = path.resolve(filePath);
-    const buffer = fs.readFileSync(resolved);
-    const ext = path.extname(filePath).toLowerCase().replace(".", "");
-    const mime = ext === "jpg" || ext === "jpeg" ? "image/jpeg" : `image/${ext}`;
-    return `data:${mime};base64,${buffer.toString("base64")}`;
+    const raw = fs.readFileSync(resolved);
+
+    // Compress + resize with sharp to keep PDF size small
+    let compressed: Buffer;
+    try {
+      const sharp = (await import("sharp")).default;
+      compressed = await sharp(raw)
+        .resize({ width: 800, withoutEnlargement: true })
+        .jpeg({ quality: 75 })
+        .toBuffer();
+    } catch {
+      // sharp unavailable – use original
+      compressed = raw;
+    }
+
+    return `data:image/jpeg;base64,${compressed.toString("base64")}`;
   } catch {
     return "";
   }

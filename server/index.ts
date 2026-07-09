@@ -1,5 +1,5 @@
 // server/index.ts
-import "dotenv/config";
+import "./loadEnv.js"; // lädt .env.development (lokal) oder .env (Produktion)
 import express from "express";
 import session from "express-session";
 import helmet from "helmet";
@@ -16,10 +16,36 @@ import protocolsRouter from "./routes/protocols.js";
 import documentsRouter from "./routes/documents.js";
 import servicesRouter from "./routes/services.js";
 import unitsRouter from "./routes/units.js";
+import catalogRouter from "./routes/catalog.js";
+import configuratorRouter from "./routes/configurator.js";
 import emailTemplatesRouter from "./routes/emailTemplates.js";
 import publicInquiriesRouter from "./routes/publicInquiries.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+function getAllowedOrigins() {
+  const configuredOrigins = (process.env.ALLOWED_ORIGINS ?? "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+  if (configuredOrigins.length > 0) {
+    return new Set(configuredOrigins);
+  }
+
+  return new Set([
+    "http://localhost:5173",
+    "http://localhost:3008",
+    "http://rechnungen.localhost:5173",
+    "http://rechnungen.localhost:3008",
+  ]);
+}
+
+function resolveCookieDomain() {
+  const cookieDomain = process.env.COOKIE_DOMAIN?.trim();
+  if (!cookieDomain) return undefined;
+  return cookieDomain.replace(/^https?:\/\//, "").replace(/:\d+$/, "");
+}
 
 async function startServer() {
   // ── 1. Migrations + seed ───────────────────────────────────────────────────
@@ -41,6 +67,26 @@ async function startServer() {
       hsts: process.env.NODE_ENV === "production",
     })
   );
+
+  const allowedOrigins = getAllowedOrigins();
+  app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (origin && allowedOrigins.has(origin)) {
+      res.header("Access-Control-Allow-Origin", origin);
+      res.header("Access-Control-Allow-Credentials", "true");
+      res.header("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
+      res.header("Access-Control-Allow-Headers", "Content-Type, x-csrf-token");
+      res.header("Vary", "Origin");
+    }
+
+    if (req.method === "OPTIONS") {
+      res.sendStatus(origin && allowedOrigins.has(origin) ? 204 : 403);
+      return;
+    }
+
+    next();
+  });
+
   app.use(express.json({ limit: "10mb" }));
   app.use(express.urlencoded({ extended: true }));
   app.use((req, res, next) => {
@@ -94,6 +140,7 @@ async function startServer() {
         maxAge: 24 * 60 * 60 * 1000,
         sameSite: "lax",
         path: "/",
+        domain: resolveCookieDomain(),
       },
     })
   );
@@ -107,6 +154,7 @@ async function startServer() {
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
+      domain: resolveCookieDomain(),
     },
     size: 64,
     getTokenFromRequest: (req) =>
@@ -198,6 +246,8 @@ async function startServer() {
   app.use("/api/documents", documentsRouter);
   app.use("/api/services", servicesRouter);
   app.use("/api/units", unitsRouter);
+  app.use("/api/catalog", catalogRouter);
+  app.use("/api/configurator", configuratorRouter);
   app.use("/api/email-templates", emailTemplatesRouter);
 
   // ── 5. Static files ────────────────────────────────────────────────────────
@@ -206,10 +256,10 @@ async function startServer() {
   app.use("/attachments", express.static(attachmentsPath, { maxAge: "1d" }));
 
   if (process.env.NODE_ENV === "production") {
-    const staticPath = path.resolve(__dirname, "../dist/public");
+    const staticPath = path.resolve(__dirname, "../dist/portal");
     app.use(express.static(staticPath));
     app.get("*", (_req, res) => {
-      res.sendFile(path.join(staticPath, "index.html"));
+      res.sendFile(path.join(staticPath, "index.portal.html"));
     });
   }
 

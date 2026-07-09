@@ -1,7 +1,13 @@
 import { defineConfig } from "drizzle-kit";
 import { config } from "dotenv";
+import { existsSync } from "fs";
 
-config();
+// Lädt .env.development falls vorhanden, sonst .env
+if (existsSync(".env.development")) {
+  config({ path: ".env.development", override: true });
+} else {
+  config({ override: true });
+}
 
 const usePostgres =
   process.env.POSTGRES_URL ||

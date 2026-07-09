@@ -150,7 +150,7 @@ export default function DashboardPage() {
             <tbody className="divide-y divide-gray-100">
               {recentDocs.map((doc, i) => (
                 <tr key={i} className="hover:bg-gray-50">
-                  <td className="px-6 py-3 font-medium">{doc.type}</td>
+                  <td className="px-6 py-3 font-medium text-gray-900">{doc.type}</td>
                   <td className="px-6 py-3 text-gray-600 font-mono text-xs">{doc.number}</td>
                   <td className="px-6 py-3 text-gray-500">
                     {new Intl.DateTimeFormat("de-DE").format(new Date(doc.date))}

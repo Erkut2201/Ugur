@@ -43,7 +43,7 @@ export default function CustomerQuickCreateModal({ onCreated, onClose }: Props) 
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Intern</label>
               <select
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold"
                 value={form.salutation}
                 onChange={(e) => set("salutation", e.target.value)}
               >
@@ -57,7 +57,7 @@ export default function CustomerQuickCreateModal({ onCreated, onClose }: Props) 
               <label className="block text-xs font-medium text-gray-600 mb-1">Vorname</label>
               <input
                 autoFocus
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold"
                 value={form.firstName}
                 onChange={(e) => set("firstName", e.target.value)}
               />
@@ -65,7 +65,7 @@ export default function CustomerQuickCreateModal({ onCreated, onClose }: Props) 
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Nachname *</label>
               <input
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold"
                 value={form.name}
                 onChange={(e) => set("name", e.target.value)}
               />
@@ -74,7 +74,7 @@ export default function CustomerQuickCreateModal({ onCreated, onClose }: Props) 
           <div className="col-span-2">
             <label className="block text-xs font-medium text-gray-600 mb-1">Firma</label>
             <input
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold"
               value={form.company}
               onChange={(e) => set("company", e.target.value)}
             />
@@ -82,7 +82,7 @@ export default function CustomerQuickCreateModal({ onCreated, onClose }: Props) 
           <div className="col-span-2">
             <label className="block text-xs font-medium text-gray-600 mb-1">Straße</label>
             <input
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold"
               value={form.street}
               onChange={(e) => set("street", e.target.value)}
             />
@@ -90,7 +90,7 @@ export default function CustomerQuickCreateModal({ onCreated, onClose }: Props) 
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">PLZ</label>
             <input
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold"
               value={form.zip}
               onChange={(e) => set("zip", e.target.value)}
             />
@@ -98,7 +98,7 @@ export default function CustomerQuickCreateModal({ onCreated, onClose }: Props) 
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Ort</label>
             <input
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold"
               value={form.city}
               onChange={(e) => set("city", e.target.value)}
             />
@@ -107,7 +107,7 @@ export default function CustomerQuickCreateModal({ onCreated, onClose }: Props) 
             <label className="block text-xs font-medium text-gray-600 mb-1">E-Mail</label>
             <input
               type="email"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold"
               value={form.email}
               onChange={(e) => set("email", e.target.value)}
             />
@@ -115,7 +115,7 @@ export default function CustomerQuickCreateModal({ onCreated, onClose }: Props) 
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Telefon</label>
             <input
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold"
               value={form.phone}
               onChange={(e) => set("phone", e.target.value)}
             />
@@ -136,7 +136,7 @@ export default function CustomerQuickCreateModal({ onCreated, onClose }: Props) 
           <button
             disabled={mutation.isPending || !form.name.trim()}
             onClick={() => mutation.mutate(form)}
-            className="bg-brand-red text-white px-6 py-2 rounded-lg text-sm font-semibold hover:bg-red-700 disabled:opacity-60"
+            className="bg-brand-gold text-white px-6 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-60"
           >
             {mutation.isPending ? "Speichern..." : "Kunde anlegen"}
           </button>

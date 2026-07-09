@@ -82,10 +82,10 @@ export default function KarrierePage() {
             Werde Teil unseres Teams
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-gray-400">
-            Bei Konzept Terrasse gestaltest du Premium-Außenbereiche mit — von der ersten Beratung bis zur Fertigstellung. Wir suchen engagierte Menschen, die mit uns wachsen wollen.
+            Bei AC Premium Bau gestaltest du Premium-Außenbereiche mit — von der ersten Beratung bis zur Fertigstellung. Wir suchen engagierte Menschen, die mit uns wachsen wollen.
           </p>
           <a
-            href="mailto:karriere@konzept-terrasse.de"
+            href="mailto:karriere@acpremiumbau.de"
             className="mt-8 inline-block rounded-md bg-brand-gold px-8 py-3.5 text-sm font-semibold text-black transition hover:opacity-90"
           >
             Jetzt bewerben
@@ -132,7 +132,7 @@ export default function KarrierePage() {
                     </div>
                   </div>
                   <a
-                    href={`mailto:karriere@konzept-terrasse.de?subject=Bewerbung: ${encodeURIComponent(pos.title)}`}
+                    href={`mailto:karriere@acpremiumbau.de?subject=Bewerbung: ${encodeURIComponent(pos.title)}`}
                     className="rounded-md bg-brand-gold px-5 py-2.5 text-sm font-semibold text-black transition hover:opacity-90 whitespace-nowrap"
                   >
                     Bewerben
@@ -184,7 +184,7 @@ export default function KarrierePage() {
             Wir freuen uns immer über motivierte Bewerbungen. Schick uns deine Initiativbewerbung — wir melden uns bei dir.
           </p>
           <a
-            href="mailto:karriere@konzept-terrasse.de"
+            href="mailto:karriere@acpremiumbau.de"
             className="inline-block rounded-md border border-brand-gold/50 px-7 py-3 text-sm font-medium text-brand-gold hover:bg-brand-gold hover:text-black transition-colors"
           >
             Initiativbewerbung senden

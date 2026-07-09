@@ -19,7 +19,7 @@ import {
   customersTableSQLite,
   insertProtocolSchema,
 } from "../../shared/schema.js";
-import { nextDocumentNumber } from "../utils/documentNumber.js";
+import { convertDocumentNumber, nextDocumentNumber } from "../utils/documentNumber.js";
 import { generateProtocolPdf } from "../services/pdfService.js";
 import { saveDocument, getDocumentUrl } from "../services/storageService.js";
 import { sendDocumentEmail } from "../services/emailService.js";
@@ -136,6 +136,10 @@ router.post("/from-invoice/:invoiceId", async (req, res) => {
     const invRows = await db.select().from(invTbl()).where(eq(invTbl().id, invoiceId)).limit(1);
     if (invRows.length === 0) { res.status(404).json({ error: "Rechnung nicht gefunden" }); return; }
     const invoice = invRows[0];
+    if (!["standard", "final"].includes(invoice.invoiceType ?? "standard")) {
+      res.status(409).json({ error: "Ein Protokoll kann nur aus der finalen Rechnung erstellt werden" });
+      return;
+    }
 
     const invItems = await db
       .select()
@@ -143,7 +147,7 @@ router.post("/from-invoice/:invoiceId", async (req, res) => {
       .where(eq(invItemsTbl().invoiceId, invoiceId))
       .orderBy(invItemsTbl().position);
 
-    const protocolNumber = await nextDocumentNumber("protocol");
+    const protocolNumber = convertDocumentNumber("protocol", invoice.invoiceNumber);
     const today = new Date().toISOString().split("T")[0];
 
     const inserted = await db

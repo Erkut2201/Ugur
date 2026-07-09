@@ -23,9 +23,9 @@ export const siteContent = {
   highlightKeys,
   faqKeys,
   contact: {
-    address: "Jakob-Krebs-Str. 53, 47877 Willich",
-    phone: "+49 2156 9106557",
-    email: "info@konzept-terrasse.de",
-    mapsQuery: "Jakob-Krebs-Str.+53+Willich",
+    address: "Bertholdweg 9, 72768 Reutlingen",
+    phone: "+49 7071 8826970",
+    email: "acun@acpremiumbau.de",
+    mapsQuery: "Bertholdweg+9+Reutlingen",
   },
 } as const;

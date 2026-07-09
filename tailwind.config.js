@@ -5,10 +5,10 @@ export default {
     extend: {
       colors: {
         brand: {
-          red: "#E55300",
-          dark: "#1a1a1a",
-          gold: "#C8A96E",
-          muted: "#555555",
+          primary: "#C8A96E",
+          dark:    "#1a1a1a",
+          muted:   "#555555",
+          gold:    "#C8A96E",
         },
       },
     },
