@@ -132,6 +132,7 @@ export default function DocumentForm({
   const [productCatalogTargetRow, setProductCatalogTargetRow] = useState<number | null>(null);
   const [showConfigurator, setShowConfigurator] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+  const [selectedManufacturerId, setSelectedManufacturerId] = useState<number | null>(null);
   const [productSearch, setProductSearch] = useState("");
 
   const { data: services = [] } = useQuery<any[]>({
@@ -187,10 +188,14 @@ export default function DocumentForm({
     );
   }, [allCatalogItems, productSearch]);
 
-  // Kategoriebaum: Nur Top-Level (parentId null)
+  // Kategoriebaum: Nur Top-Level (parentId null), gefiltert nach gewähltem Hersteller
   const topLevelCategories = useMemo(
-    () => catalogCategories.filter((c: any) => !c.parentId),
-    [catalogCategories]
+    () => catalogCategories.filter((c: any) => {
+      if (c.parentId) return false;
+      if (selectedManufacturerId !== null && c.manufacturerId !== selectedManufacturerId) return false;
+      return true;
+    }),
+    [catalogCategories, selectedManufacturerId]
   );
   const subCategories = useMemo(
     () => (parentId: number) => catalogCategories.filter((c: any) => c.parentId === parentId),
@@ -573,7 +578,7 @@ Bruchsicher, UV-beständig und langlebig, passend zu allen Terrassenüberdachung
               🔧 Konfigurator
             </button>
             <button
-              onClick={() => { setProductCatalogTargetRow(null); setShowProductCatalog(true); setProductSearch(""); setSelectedCategoryId(null); }}
+              onClick={() => { setProductCatalogTargetRow(null); setShowProductCatalog(true); setProductSearch(""); setSelectedCategoryId(null); setSelectedManufacturerId(null); }}
               className="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg font-medium transition-colors"
             >
               🏷️ Produkt
@@ -836,11 +841,11 @@ Bruchsicher, UV-beständig und langlebig, passend zu allen Terrassenüberdachung
             <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
               <h2 className="text-base font-bold text-gray-900">Produkt aus Katalog wählen</h2>
               <button
-                onClick={() => { setShowProductCatalog(false); setSelectedCategoryId(null); setProductSearch(""); }}
+                onClick={() => { setShowProductCatalog(false); setSelectedCategoryId(null); setSelectedManufacturerId(null); setProductSearch(""); }}
                 className="text-gray-400 hover:text-gray-700 text-xl leading-none"
               >×</button>
             </div>
-            <div className="px-4 pt-3">
+            <div className="px-4 pt-3 space-y-2">
               <input
                 autoFocus
                 type="text"
@@ -849,6 +854,33 @@ Bruchsicher, UV-beständig und langlebig, passend zu allen Terrassenüberdachung
                 onChange={(e) => setProductSearch(e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+              {catalogManufacturers.length > 1 && (
+                <div className="flex flex-wrap gap-1.5 pb-1">
+                  <button
+                    onClick={() => { setSelectedManufacturerId(null); setSelectedCategoryId(null); }}
+                    className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors border ${
+                      selectedManufacturerId === null
+                        ? "bg-blue-600 text-white border-blue-600"
+                        : "bg-white text-gray-600 border-gray-300 hover:border-blue-400 hover:text-blue-600"
+                    }`}
+                  >
+                    Alle
+                  </button>
+                  {catalogManufacturers.map((mfr: any) => (
+                    <button
+                      key={mfr.id}
+                      onClick={() => { setSelectedManufacturerId(mfr.id); setSelectedCategoryId(null); }}
+                      className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors border ${
+                        selectedManufacturerId === mfr.id
+                          ? "bg-blue-600 text-white border-blue-600"
+                          : "bg-white text-gray-600 border-gray-300 hover:border-blue-400 hover:text-blue-600"
+                      }`}
+                    >
+                      {mfr.name}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
             {productSearch.trim() ? (
               /* Suchergebnisse */
