@@ -3,12 +3,18 @@
 // Format: {PREFIX}{YY}-{NNN}  e.g. ANG26-001
 // Prefix comes from env vars: QUOTE_PREFIX, INVOICE_PREFIX, PROTOCOL_PREFIX
 
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc, like } from "drizzle-orm";
 import { getDb } from "../db.js";
 import {
   USE_POSTGRES,
   documentCountersTable,
   documentCountersTableSQLite,
+  quotesTable,
+  quotesTableSQLite,
+  invoicesTable,
+  invoicesTableSQLite,
+  protocolsTable,
+  protocolsTableSQLite,
 } from "../../shared/schema.js";
 
 type DocType = "quote" | "invoice" | "protocol";
@@ -21,6 +27,18 @@ const prefixMap: Record<DocType, string> = {
 
 const countersTable = () =>
   USE_POSTGRES ? documentCountersTable : documentCountersTableSQLite;
+
+const documentTables = {
+  quote: () => USE_POSTGRES ? quotesTable : quotesTableSQLite,
+  invoice: () => USE_POSTGRES ? invoicesTable : invoicesTableSQLite,
+  protocol: () => USE_POSTGRES ? protocolsTable : protocolsTableSQLite,
+};
+
+const documentNumberColumns = {
+  quote: "quoteNumber",
+  invoice: "invoiceNumber",
+  protocol: "protocolNumber",
+} as const;
 
 function formatDocumentNumber(type: DocType, year: number, sequence: number): string {
   const prefix = prefixMap[type];
@@ -75,24 +93,51 @@ export async function nextDocumentNumber(type: DocType): Promise<string> {
   const { db } = getDb();
   const year = new Date().getFullYear();
   const tbl = countersTable();
+  const prefix = prefixMap[type];
+  const shortYear = String(year).slice(-2);
 
-  // Find or create the per-type counter row for this year
-  let rows = await (db as any)
+  // 1. Prüfe die letzte Dokumentnummer aus der Datenbank
+  const docTable = documentTables[type]();
+  const docNumberCol = documentNumberColumns[type];
+  const pattern = `${prefix}${shortYear}-%`;
+
+  const lastDocRows = await (db as any)
+    .select()
+    .from(docTable)
+    .where(like((docTable as any)[docNumberCol], pattern))
+    .orderBy(desc((docTable as any)[docNumberCol]))
+    .limit(1);
+
+  let maxSequenceFromDb = 0;
+  if (lastDocRows.length > 0) {
+    const lastNumber = lastDocRows[0][docNumberCol];
+    const parsed = parseDocumentNumber(lastNumber);
+    if (parsed && parsed.year === year) {
+      maxSequenceFromDb = parsed.sequence;
+    }
+  }
+
+  // 2. Prüfe den Counter
+  let counterRows = await (db as any)
     .select()
     .from(tbl)
     .where(and(eq(tbl.type, type), eq(tbl.year, year)))
     .limit(1);
 
-  let nextNum: number;
+  let maxSequenceFromCounter = 0;
+  if (counterRows.length > 0) {
+    maxSequenceFromCounter = counterRows[0].lastNumber;
+  }
 
-  if (rows.length === 0) {
-    const inserted = await (db as any)
+  // 3. Nimm das Maximum aus beiden Quellen
+  const nextNum = Math.max(maxSequenceFromDb, maxSequenceFromCounter) + 1;
+
+  // 4. Aktualisiere oder erstelle den Counter
+  if (counterRows.length === 0) {
+    await (db as any)
       .insert(tbl)
-      .values({ type, year, lastNumber: 1 })
-      .returning();
-    nextNum = inserted[0]?.lastNumber ?? 1;
+      .values({ type, year, lastNumber: nextNum });
   } else {
-    nextNum = rows[0].lastNumber + 1;
     await (db as any)
       .update(tbl)
       .set({ lastNumber: nextNum })
@@ -100,4 +145,35 @@ export async function nextDocumentNumber(type: DocType): Promise<string> {
   }
 
   return formatDocumentNumber(type, year, nextNum);
+}
+
+export async function reserveDocumentNumber(type: DocType, documentNumber: string): Promise<void> {
+  const parsed = parseDocumentNumber(documentNumber);
+  if (!parsed) {
+    throw new Error(`Ungültige Dokumentnummer: ${documentNumber}`);
+  }
+
+  const { db } = getDb();
+  const { year, sequence } = parsed;
+  const tbl = countersTable();
+
+  const rows = await (db as any)
+    .select()
+    .from(tbl)
+    .where(and(eq(tbl.type, type), eq(tbl.year, year)))
+    .limit(1);
+
+  if (rows.length === 0) {
+    await (db as any)
+      .insert(tbl)
+      .values({ type, year, lastNumber: sequence });
+  } else {
+    const currentLastNumber = rows[0].lastNumber;
+    if (sequence > currentLastNumber) {
+      await (db as any)
+        .update(tbl)
+        .set({ lastNumber: sequence })
+        .where(and(eq(tbl.type, type), eq(tbl.year, year)));
+    }
+  }
 }

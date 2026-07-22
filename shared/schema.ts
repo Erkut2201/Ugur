@@ -522,6 +522,7 @@ export const insertQuoteSchema = z.object({
 });
 
 export const insertInvoiceSchema = z.object({
+  invoiceNumber: z.string().trim().min(1).optional(),
   quoteId: z.number().int().positive().optional().nullable(),
   customerId: z.number().int().positive().optional().nullable(),
   invoiceType: z.enum(["standard", "down_payment", "final"]).default("standard"),

@@ -22,6 +22,7 @@ import {
 import {
   formatInstallmentInvoiceNumber,
   nextDocumentNumber,
+  reserveDocumentNumber,
 } from "../utils/documentNumber.js";
 import { generateInvoicePdf } from "../services/pdfService.js";
 import { saveDocument, getDocumentUrl } from "../services/storageService.js";
@@ -136,8 +137,30 @@ router.post("/", async (req, res) => {
 
   try {
     const { db } = getDb();
-    const invoiceNumber = await nextDocumentNumber("invoice");
-    const { items, ...invoiceData } = parsed.data;
+    const { items, invoiceNumber: userInvoiceNumber, ...invoiceData } = parsed.data;
+
+    let invoiceNumber: string;
+
+    if (userInvoiceNumber) {
+      // Manuelle Rechnungsnummer - prüfen ob bereits vergeben
+      const existing = await db
+        .select()
+        .from(tbl())
+        .where(eq(tbl().invoiceNumber, userInvoiceNumber))
+        .limit(1);
+
+      if (existing.length > 0) {
+        res.status(409).json({ error: `Rechnungsnummer ${userInvoiceNumber} ist bereits vergeben` });
+        return;
+      }
+
+      invoiceNumber = userInvoiceNumber;
+      // Reserviere die Nummer im Counter-System
+      await reserveDocumentNumber("invoice", invoiceNumber);
+    } else {
+      // Automatische Nummerierung
+      invoiceNumber = await nextDocumentNumber("invoice");
+    }
 
     const inserted = await db
       .insert(tbl())
