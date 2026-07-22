@@ -553,7 +553,9 @@ function addGreeting(doc: jsPDF, customer: any | null | undefined, y: number, la
   y += layout.greetingParagraphGap;
 
   const wrapped = doc.splitTextToSize(line3, CONTENT_WIDTH) as string[];
-  doc.text(wrapped, MARGIN, y);
+  for (let i = 0; i < wrapped.length; i += 1) {
+    doc.text(wrapped[i], MARGIN, y + i * layout.greetingWrapLineHeight);
+  }
   y += wrapped.length * layout.greetingWrapLineHeight + 4;
 
   return y;
@@ -874,7 +876,9 @@ async function addItemsTable(
     doc.setFont(PDF_FONT, "bold");
     doc.setFontSize(tableLayout.titleFontSize);
     doc.setTextColor(...COLOR_DARK);
-    doc.text(parts.wrappedTitle, contentX, y + tableLayout.titleLineHeight);
+    for (let i = 0; i < parts.wrappedTitle.length; i += 1) {
+      doc.text(parts.wrappedTitle[i], contentX, y + tableLayout.titleLineHeight + i * tableLayout.titleLineHeight);
+    }
     doc.text(formatCurrencyEur(parts.total), priceX, y + tableLayout.titleLineHeight, { align: "right" });
 
     y += parts.wrappedTitle.length * tableLayout.titleLineHeight + tableLayout.titleAfterGap;
@@ -891,7 +895,9 @@ async function addItemsTable(
       doc.setFont(PDF_FONT, "italic");
       doc.setFontSize(tableLayout.detailFontSize);
       doc.setTextColor(...COLOR_GRAY);
-      doc.text(parts.productDescLines, contentX, y + tableLayout.detailLineHeight - 0.4);
+      for (let i = 0; i < parts.productDescLines.length; i += 1) {
+        doc.text(parts.productDescLines[i], contentX, y + tableLayout.detailLineHeight - 0.4 + i * tableLayout.detailLineHeight);
+      }
       y += parts.productDescLines.length * tableLayout.detailLineHeight + tableLayout.detailAfterGap;
     }
 
@@ -902,7 +908,9 @@ async function addItemsTable(
 
       for (let paragraphIndex = 0; paragraphIndex < parts.productInfoParagraphs.length; paragraphIndex += 1) {
         const paragraphLines = parts.productInfoParagraphs[paragraphIndex];
-        doc.text(paragraphLines, contentX, y + tableLayout.infoLineHeight - 0.4);
+        for (let lineIndex = 0; lineIndex < paragraphLines.length; lineIndex += 1) {
+          doc.text(paragraphLines[lineIndex], contentX, y + tableLayout.infoLineHeight - 0.4 + lineIndex * tableLayout.infoLineHeight);
+        }
         y += paragraphLines.length * tableLayout.infoLineHeight;
         if (paragraphIndex < parts.productInfoParagraphs.length - 1) {
           y += tableLayout.infoParagraphGap;
@@ -918,7 +926,9 @@ async function addItemsTable(
       doc.setTextColor(...COLOR_GRAY);
 
       for (const wrappedDetail of parts.wrappedDetails) {
-        doc.text(wrappedDetail, contentX, y + tableLayout.detailLineHeight - 0.4);
+        for (let i = 0; i < wrappedDetail.length; i += 1) {
+          doc.text(wrappedDetail[i], contentX, y + tableLayout.detailLineHeight - 0.4 + i * tableLayout.detailLineHeight);
+        }
         y += wrappedDetail.length * tableLayout.detailLineHeight + tableLayout.detailAfterGap;
       }
     }
@@ -926,7 +936,9 @@ async function addItemsTable(
     doc.setFont(PDF_FONT, "normal");
     doc.setFontSize(tableLayout.qtyFontSize);
     doc.setTextColor(...COLOR_GRAY);
-    doc.text(parts.wrappedQty, contentX, y + tableLayout.qtyLineHeight - 0.3);
+    for (let i = 0; i < parts.wrappedQty.length; i += 1) {
+      doc.text(parts.wrappedQty[i], contentX, y + tableLayout.qtyLineHeight - 0.3 + i * tableLayout.qtyLineHeight);
+    }
     y += parts.wrappedQty.length * tableLayout.qtyLineHeight + tableLayout.qtyAfterGap;
   }
 
@@ -1428,8 +1440,11 @@ export async function generateProtocolPdf(protocol: any): Promise<Buffer> {
     doc.setFontSize(9);
     doc.setTextColor(...COLOR_DARK);
     y += 5;
-    doc.text(doc.splitTextToSize(protocol.defects, CONTENT_WIDTH) as string[], MARGIN, y);
-    y += 12;
+    const defectsLines = doc.splitTextToSize(protocol.defects, CONTENT_WIDTH) as string[];
+    for (let i = 0; i < defectsLines.length; i += 1) {
+      doc.text(defectsLines[i], MARGIN, y + i * 4);
+    }
+    y += defectsLines.length * 4 + 8;
   }
 
   if (protocol.notes) {
@@ -1439,8 +1454,11 @@ export async function generateProtocolPdf(protocol: any): Promise<Buffer> {
     doc.setFont(PDF_FONT, "normal");
     doc.setFontSize(9);
     y += 5;
-    doc.text(doc.splitTextToSize(protocol.notes, CONTENT_WIDTH) as string[], MARGIN, y);
-    y += 12;
+    const notesLines = doc.splitTextToSize(protocol.notes, CONTENT_WIDTH) as string[];
+    for (let i = 0; i < notesLines.length; i += 1) {
+      doc.text(notesLines[i], MARGIN, y + i * 4);
+    }
+    y += notesLines.length * 4 + 8;
   }
 
   const sigY = Math.max(y + 10, FOOTER_Y - 30);
