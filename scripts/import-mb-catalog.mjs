@@ -6,9 +6,9 @@ import XLSX from "xlsx";
 if (existsSync(".env.development")) config({ path: ".env.development", override: true });
 else config({ override: true });
 
-const connectionString = process.env.POSTGRES_URL;
+const connectionString = process.env.NEON_POSTGRES_URL ?? process.env.POSTGRES_URL;
 if (!connectionString) {
-  console.error("❌ Kein POSTGRES_URL gefunden");
+  console.error("❌ Kein NEON_POSTGRES_URL oder POSTGRES_URL gefunden");
   process.exit(1);
 }
 
@@ -83,13 +83,14 @@ function parseMatrixSections(sheetName, rows) {
       if (isSectionTitle(current, lookahead)) break;
 
       const rowValue = parseNumber(current[0]);
+      const rowLabel = current[0].replace(/\*/g, "").trim();
       if (rowValue !== null) {
         for (let col = 1; col < current.length; col++) {
           const price = parseNumber(current[col]);
           const widthOrHeight = columns[col - 1];
           if (price === null || widthOrHeight === null) continue;
           items.push({
-            name: `Breite (cm) ${widthOrHeight} × Tiefe ${current[0]}`,
+            name: `Breite (cm) ${widthOrHeight} × Tiefe ${rowLabel}`,
             description: null,
             unit: "Pauschal",
             unitPrice: price,
@@ -293,12 +294,11 @@ for (const sheetName of sheetNames) {
     sections = parseFenceSections(sheetName, rows);
   } else if (matrixSheets.has(sheetName)) {
     sections = parseMatrixSections(sheetName, rows);
-    if (sheetName === "MARKISEN & SCREENS" || sheetName === "GELÄNDER" || sheetName === "GUILLOTINE") {
-      const additionalSections = parseListSections(sheetName, rows);
-      const existingSectionNames = new Set(sections.map((section) => section.sectionName));
-      for (const section of additionalSections) {
-        if (!existingSectionNames.has(section.sectionName)) sections.push(section);
-      }
+    // Für alle Matrix-Sheets auch Listsektionen (z.B. Zubehör / Einzelteile) einlesen
+    const additionalSections = parseListSections(sheetName, rows);
+    const existingSectionNames = new Set(sections.map((section) => section.sectionName));
+    for (const section of additionalSections) {
+      if (!existingSectionNames.has(section.sectionName)) sections.push(section);
     }
   } else if (listSheets.has(sheetName)) {
     sections = parseListSections(sheetName, rows);

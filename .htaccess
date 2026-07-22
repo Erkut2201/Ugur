@@ -1,0 +1,3 @@
+RewriteEngine On
+RewriteCond %{REQUEST_URI} !^/maintenance\.html$
+RewriteRule ^(.*)$ /maintenance.html [R=302,L]

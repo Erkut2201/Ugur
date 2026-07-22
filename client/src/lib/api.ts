@@ -24,11 +24,15 @@ export async function apiRequest<T = unknown>(
 
   if (!res.ok) {
     let message = res.statusText;
+    let errorData: any = null;
     try {
-      const data = await res.json();
-      message = data?.error ?? message;
+      errorData = await res.json();
+      message = errorData?.error ?? errorData?.message ?? message;
     } catch {}
-    throw new ApiError(res.status, message);
+    const error = new ApiError(res.status, message);
+    // Attach full error data for structured error handling
+    (error as any).data = errorData;
+    throw error;
   }
 
   if (res.status === 204) return undefined as T;

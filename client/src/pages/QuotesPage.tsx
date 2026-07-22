@@ -25,6 +25,9 @@ export default function QuotesPage() {
   const [emailTarget, setEmailTarget] = useState<any>(null);
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [editingNumberId, setEditingNumberId] = useState<number | null>(null);
+  const [editingNumberValue, setEditingNumberValue] = useState("");
+  const [conflictDialog, setConflictDialog] = useState<{ quoteId: number; newNumber: string; existingId: number } | null>(null);
 
   const { data: quotes = [], isLoading } = useQuery<any[]>({
     queryKey: ["/api/quotes"],
@@ -83,6 +86,29 @@ export default function QuotesPage() {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["/api/quotes"] }); },
   });
 
+  const updateNumberMutation = useMutation({
+    mutationFn: ({ id, newNumber, resolution }: { id: number; newNumber: string; resolution?: "temp" | "next" }) =>
+      api.patch(`/api/quotes/${id}/number`, { newNumber, resolution }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/quotes"] });
+      setEditingNumberId(null);
+      setEditingNumberValue("");
+      setConflictDialog(null);
+    },
+    onError: (err: any) => {
+      const errorData = err.data;
+      if (errorData?.error === "duplicate") {
+        setConflictDialog({
+          quoteId: editingNumberId!,
+          newNumber: editingNumberValue,
+          existingId: errorData.existingId,
+        });
+      } else {
+        alert("Fehler: " + (errorData?.message ?? err.message ?? "Unbekannter Fehler"));
+      }
+    },
+  });
+
   const { data: editingFull, isLoading: editingLoading } = useQuery<any>({
     queryKey: ["/api/quotes", editingId],
     queryFn: () => api.get(`/api/quotes/${editingId}`),
@@ -98,6 +124,33 @@ export default function QuotesPage() {
   function openEmail(q: any) {
     setEmailTarget(q);
     setEmailDialogOpen(true);
+  }
+
+  function startEditNumber(q: any) {
+    setEditingNumberId(q.id);
+    setEditingNumberValue(q.quoteNumber);
+  }
+
+  function cancelEditNumber() {
+    setEditingNumberId(null);
+    setEditingNumberValue("");
+  }
+
+  function saveNumber(id: number) {
+    if (!editingNumberValue.trim()) {
+      alert("Nummer darf nicht leer sein");
+      return;
+    }
+    updateNumberMutation.mutate({ id, newNumber: editingNumberValue.trim() });
+  }
+
+  function resolveConflict(resolution: "temp" | "next") {
+    if (!conflictDialog) return;
+    updateNumberMutation.mutate({
+      id: conflictDialog.quoteId,
+      newNumber: conflictDialog.newNumber,
+      resolution,
+    });
   }
 
   if (view === "form") {
@@ -136,6 +189,45 @@ export default function QuotesPage() {
           onSuccess={() => qc.invalidateQueries({ queryKey: ["/api/quotes"] })}
         />
       )}
+
+      {/* Conflict Resolution Dialog */}
+      {conflictDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-3">Nummer bereits vergeben</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              Die Angebotsnummer <span className="font-mono font-bold">{conflictDialog.newNumber}</span> existiert bereits.
+              Wie soll mit der alten Nummer verfahren werden?
+            </p>
+            <div className="space-y-3 mb-6">
+              <button
+                onClick={() => resolveConflict("temp")}
+                disabled={updateNumberMutation.isPending}
+                className="w-full bg-blue-600 text-white py-2.5 px-4 rounded-lg text-sm font-semibold hover:bg-blue-700 disabled:opacity-50"
+              >
+                Temporäre Nummer vergeben
+                <div className="text-xs opacity-90 mt-0.5">Das alte Angebot erhält eine temporäre Nummer (z.B. ANG26-003-TEMP-...)</div>
+              </button>
+              <button
+                onClick={() => resolveConflict("next")}
+                disabled={updateNumberMutation.isPending}
+                className="w-full bg-green-600 text-white py-2.5 px-4 rounded-lg text-sm font-semibold hover:bg-green-700 disabled:opacity-50"
+              >
+                Nächste Nummer vergeben
+                <div className="text-xs opacity-90 mt-0.5">Das alte Angebot erhält automatisch die nächste verfügbare Nummer</div>
+              </button>
+            </div>
+            <button
+              onClick={() => { setConflictDialog(null); setEditingNumberId(null); setEditingNumberValue(""); }}
+              disabled={updateNumberMutation.isPending}
+              className="w-full bg-gray-200 text-gray-700 py-2 px-4 rounded-lg text-sm font-semibold hover:bg-gray-300 disabled:opacity-50"
+            >
+              Abbrechen
+            </button>
+          </div>
+        </div>
+      )}
+
       <div>
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-black text-gray-900">Angebote</h1>
@@ -188,7 +280,43 @@ export default function QuotesPage() {
                 {filtered.map((q) => (
                   <tr key={q.id} className="hover:bg-gray-50">
                     <td className="px-5 py-3">
-                      <div className="font-mono text-xs text-gray-700">{q.quoteNumber}</div>
+                      {editingNumberId === q.id ? (
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={editingNumberValue}
+                            onChange={(e) => setEditingNumberValue(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") saveNumber(q.id);
+                              if (e.key === "Escape") cancelEditNumber();
+                            }}
+                            className="font-mono text-xs border border-blue-500 rounded px-2 py-1 w-32 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            autoFocus
+                          />
+                          <button
+                            onClick={() => saveNumber(q.id)}
+                            disabled={updateNumberMutation.isPending}
+                            className="text-xs text-green-600 hover:underline disabled:opacity-50"
+                          >
+                            ✓
+                          </button>
+                          <button
+                            onClick={cancelEditNumber}
+                            disabled={updateNumberMutation.isPending}
+                            className="text-xs text-red-600 hover:underline disabled:opacity-50"
+                          >
+                            ✗
+                          </button>
+                        </div>
+                      ) : (
+                        <div 
+                          className="font-mono text-xs text-gray-700 cursor-pointer hover:text-blue-600 hover:underline"
+                          onClick={() => startEditNumber(q)}
+                          title="Klicken zum Bearbeiten"
+                        >
+                          {q.quoteNumber}
+                        </div>
+                      )}
                       {(q.linkedInvoices ?? []).length > 0 && (
                         <div className="mt-1 flex flex-wrap gap-1">
                           {(q.linkedInvoices ?? []).map((invoice: any) => (
@@ -263,7 +391,43 @@ export default function QuotesPage() {
                 <div key={q.id} className="p-4 space-y-2">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <div className="font-mono text-xs font-bold text-gray-800">{q.quoteNumber}</div>
+                      {editingNumberId === q.id ? (
+                        <div className="flex items-center gap-2 mb-1">
+                          <input
+                            type="text"
+                            value={editingNumberValue}
+                            onChange={(e) => setEditingNumberValue(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") saveNumber(q.id);
+                              if (e.key === "Escape") cancelEditNumber();
+                            }}
+                            className="font-mono text-xs border border-blue-500 rounded px-2 py-1 w-32 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            autoFocus
+                          />
+                          <button
+                            onClick={() => saveNumber(q.id)}
+                            disabled={updateNumberMutation.isPending}
+                            className="text-xs text-green-600 hover:underline disabled:opacity-50"
+                          >
+                            ✓
+                          </button>
+                          <button
+                            onClick={cancelEditNumber}
+                            disabled={updateNumberMutation.isPending}
+                            className="text-xs text-red-600 hover:underline disabled:opacity-50"
+                          >
+                            ✗
+                          </button>
+                        </div>
+                      ) : (
+                        <div 
+                          className="font-mono text-xs font-bold text-gray-800 cursor-pointer hover:text-blue-600 hover:underline"
+                          onClick={() => startEditNumber(q)}
+                          title="Klicken zum Bearbeiten"
+                        >
+                          {q.quoteNumber}
+                        </div>
+                      )}
                       {(q.linkedInvoices ?? []).length > 0 && (
                         <div className="mt-1 flex flex-wrap gap-1">
                           {(q.linkedInvoices ?? []).map((invoice: any) => (

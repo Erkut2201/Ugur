@@ -278,4 +278,74 @@ router.post("/:id/send-email", async (req, res) => {
   }
 });
 
+// PATCH /api/quotes/:id/number — change quote number with duplicate handling
+router.patch("/:id/number", async (req, res) => {
+  try {
+    const { newNumber, resolution } = req.body;
+    const id = Number(req.params.id);
+
+    if (!newNumber || typeof newNumber !== "string") {
+      res.status(400).json({ error: "newNumber erforderlich" });
+      return;
+    }
+
+    const { db } = getDb();
+
+    // Check if new number already exists
+    const existing = await db
+      .select()
+      .from(tbl())
+      .where(eq(tbl().quoteNumber, newNumber))
+      .limit(1);
+
+    if (existing.length > 0 && existing[0].id !== id) {
+      // Duplicate found
+      if (!resolution) {
+        res.status(409).json({
+          error: "duplicate",
+          message: `Die Angebotsnummer ${newNumber} existiert bereits.`,
+          existingId: existing[0].id,
+        });
+        return;
+      }
+
+      // Handle resolution
+      if (resolution === "temp") {
+        // Give old quote a temporary number
+        const tempNumber = `${newNumber}-TEMP-${Date.now()}`;
+        await db
+          .update(tbl())
+          .set({ quoteNumber: tempNumber, updatedAt: new Date() })
+          .where(eq(tbl().id, existing[0].id));
+      } else if (resolution === "next") {
+        // Give old quote the next available number
+        const nextNumber = await nextDocumentNumber("quote");
+        await db
+          .update(tbl())
+          .set({ quoteNumber: nextNumber, updatedAt: new Date() })
+          .where(eq(tbl().id, existing[0].id));
+      } else {
+        res.status(400).json({ error: "Ungültige resolution: temp oder next erforderlich" });
+        return;
+      }
+    }
+
+    // Update the target quote with new number
+    await db
+      .update(tbl())
+      .set({ quoteNumber: newNumber, updatedAt: new Date() })
+      .where(eq(tbl().id, id));
+
+    const updated = await getQuoteWithItems(db, id);
+    res.json(updated);
+  } catch (err: any) {
+    console.error("[quotes/update-number]", err);
+    if (err?.code === "23505" || err?.code === "SQLITE_CONSTRAINT") {
+      res.status(409).json({ error: "Die Angebotsnummer existiert bereits" });
+      return;
+    }
+    res.status(500).json({ error: "Interner Serverfehler" });
+  }
+});
+
 export default router;
