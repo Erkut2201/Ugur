@@ -29,11 +29,11 @@ const LATO_BOLD_B64    = loadFontBase64("Lato-Bold.ttf");
 function registerLato(doc: jsPDF) {
   if (LATO_REGULAR_B64) {
     doc.addFileToVFS("Lato-Regular.ttf", LATO_REGULAR_B64);
-    doc.addFont("Lato-Regular.ttf", "lato", "normal");
+    doc.addFont("Lato-Regular.ttf", "lato", "normal", "Identity-H");
   }
   if (LATO_BOLD_B64) {
     doc.addFileToVFS("Lato-Bold.ttf", LATO_BOLD_B64);
-    doc.addFont("Lato-Bold.ttf", "lato", "bold");
+    doc.addFont("Lato-Bold.ttf", "lato", "bold", "Identity-H");
   }
 }
 
