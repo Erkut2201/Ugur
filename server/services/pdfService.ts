@@ -37,7 +37,7 @@ function registerLato(doc: jsPDF) {
   }
 }
 
-const PDF_FONT = "helvetica"; // LATO_REGULAR_B64 ? "lato" : "helvetica";
+const PDF_FONT = LATO_REGULAR_B64 ? "lato" : "helvetica";
 
 // --- Env-based company config -------------------------------------------------
 function company() {
@@ -296,6 +296,14 @@ function decodeHtmlEntities(text: string): string {
     '&copy;': '©',
     '&reg;': '®',
     '&trade;': '™',
+    // German umlauts
+    '&auml;': 'ä',
+    '&ouml;': 'ö',
+    '&uuml;': 'ü',
+    '&Auml;': 'Ä',
+    '&Ouml;': 'Ö',
+    '&Uuml;': 'Ü',
+    '&szlig;': 'ß',
   };
   
   let decoded = text;

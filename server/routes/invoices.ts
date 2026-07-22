@@ -38,6 +38,29 @@ const quoteItemsTbl = () => (USE_POSTGRES ? quoteItemsTable : quoteItemsTableSQL
 const custTbl = () => (USE_POSTGRES ? customersTable : customersTableSQLite);
 const protTbl = () => (USE_POSTGRES ? protocolsTable : protocolsTableSQLite);
 
+// Normalisiert Text: entfernt unsichtbare Unicode-Zeichen und falsche Kodierungen
+function normalizeText(text: string | null | undefined): string | null | undefined {
+  if (!text) return text;
+  return text
+    .normalize('NFC')  // Unicode normalisieren
+    .replace(/[\u200B-\u200D\uFEFF]/g, '')  // Zero-width spaces entfernen
+    .replace(/\u00A0/g, ' ')  // Non-breaking space → normales Leerzeichen
+    .trim();
+}
+
+// Normalisiert alle Text-Felder in Items
+function normalizeItems(items: any[]): any[] {
+  return items.map(item => ({
+    ...item,
+    description: normalizeText(item.description),
+    manufacturer: normalizeText(item.manufacturer),
+    productInfoTitle: normalizeText(item.productInfoTitle),
+    productInfoText: normalizeText(item.productInfoText),
+    productDescription: normalizeText(item.productDescription),
+    unit: normalizeText(item.unit),
+  }));
+}
+
 async function getInvoiceWithItems(db: any, id: number) {
   const rows = await db.select().from(tbl()).where(eq(tbl().id, id)).limit(1);
   if (rows.length === 0) return null;
@@ -169,7 +192,8 @@ router.post("/", async (req, res) => {
     const invoice = inserted[0];
 
     if (items.length > 0) {
-      await db.insert(itemsTbl()).values(items.map((item) => ({ ...item, invoiceId: invoice.id })));
+      const normalizedItems = normalizeItems(items);
+      await db.insert(itemsTbl()).values(normalizedItems.map((item) => ({ ...item, invoiceId: invoice.id })));
     }
 
     res.status(201).json(await getInvoiceWithItems(db, invoice.id));
@@ -413,7 +437,8 @@ router.put("/:id", async (req, res) => {
 
     await db.delete(itemsTbl()).where(eq(itemsTbl().invoiceId, id));
     if (items.length > 0) {
-      await db.insert(itemsTbl()).values(items.map((item) => ({ ...item, invoiceId: id })));
+      const normalizedItems = normalizeItems(items);
+      await db.insert(itemsTbl()).values(normalizedItems.map((item) => ({ ...item, invoiceId: id })));
     }
 
     const full = await getInvoiceWithItems(db, id);
