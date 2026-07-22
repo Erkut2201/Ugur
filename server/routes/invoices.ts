@@ -441,6 +441,69 @@ router.patch("/:id/status", async (req, res) => {
   }
 });
 
+// PATCH /api/invoices/:id/number
+router.patch("/:id/number", async (req, res) => {
+  const { newNumber, resolution } = req.body ?? {};
+  if (!newNumber?.trim()) {
+    res.status(400).json({ error: "Nummer darf nicht leer sein" });
+    return;
+  }
+
+  try {
+    const { db } = getDb();
+    const id = Number(req.params.id);
+
+    // Prüfe ob die neue Nummer bereits existiert
+    const existing = await db
+      .select()
+      .from(tbl())
+      .where(eq(tbl().invoiceNumber, newNumber.trim()))
+      .limit(1);
+
+    if (existing.length > 0 && existing[0].id !== id) {
+      // Konflikt: Nummer bereits vergeben
+      if (resolution === "temp") {
+        // Gib der alten Rechnung eine temporäre Nummer
+        const timestamp = Date.now();
+        const tempNumber = `${existing[0].invoiceNumber}-TEMP-${timestamp}`;
+        await db
+          .update(tbl())
+          .set({ invoiceNumber: tempNumber })
+          .where(eq(tbl().id, existing[0].id));
+      } else if (resolution === "next") {
+        // Gib der alten Rechnung die nächste freie Nummer
+        const nextNumber = await nextDocumentNumber("invoice");
+        await db
+          .update(tbl())
+          .set({ invoiceNumber: nextNumber })
+          .where(eq(tbl().id, existing[0].id));
+      } else {
+        // Kein resolution-Param: Sende Konflikt-Info zurück
+        res.status(409).json({
+          error: "duplicate",
+          message: `Rechnungsnummer ${newNumber.trim()} ist bereits vergeben`,
+          existingId: existing[0].id,
+        });
+        return;
+      }
+    }
+
+    // Aktualisiere die Nummer
+    await db
+      .update(tbl())
+      .set({ invoiceNumber: newNumber.trim() })
+      .where(eq(tbl().id, id));
+
+    // Reserviere die Nummer im Counter-System
+    await reserveDocumentNumber("invoice", newNumber.trim());
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("[invoices/number]", err);
+    res.status(500).json({ error: "Interner Serverfehler" });
+  }
+});
+
 // DELETE /api/invoices/:id
 router.delete("/:id", async (req, res) => {
   try {

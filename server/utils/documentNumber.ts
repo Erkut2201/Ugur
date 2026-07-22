@@ -48,7 +48,10 @@ function formatDocumentNumber(type: DocType, year: number, sequence: number): st
 }
 
 function parseDocumentNumber(documentNumber: string): { year: number; sequence: number } | null {
-  const compactMatch = documentNumber.match(/^[A-Z]+(\d{2})-(\d+)$/i);
+  // Entferne Teilrechnungs-Suffix (z.B. -01, -02) falls vorhanden
+  const baseNumber = documentNumber.replace(/-\d{2}$/, '');
+  
+  const compactMatch = baseNumber.match(/^[A-Z]+(\d{2})-(\d+)$/i);
   if (compactMatch) {
     return {
       year: 2000 + Number(compactMatch[1]),
@@ -56,7 +59,7 @@ function parseDocumentNumber(documentNumber: string): { year: number; sequence: 
     };
   }
 
-  const legacyMatch = documentNumber.match(/^[A-Z]+-(\d{4})-(\d+)$/i);
+  const legacyMatch = baseNumber.match(/^[A-Z]+-(\d{4})-(\d+)$/i);
   if (legacyMatch) {
     return {
       year: Number(legacyMatch[1]),

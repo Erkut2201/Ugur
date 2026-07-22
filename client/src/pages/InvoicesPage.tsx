@@ -25,6 +25,9 @@ export default function InvoicesPage() {
   const [emailTarget, setEmailTarget] = useState<any>(null);
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [editingNumberId, setEditingNumberId] = useState<number | null>(null);
+  const [editingNumberValue, setEditingNumberValue] = useState("");
+  const [conflictDialog, setConflictDialog] = useState<{ invoiceId: number; newNumber: string; existingId: number } | null>(null);
 
   const { data: invoices = [], isLoading } = useQuery<any[]>({
     queryKey: ["/api/invoices"],
@@ -83,6 +86,56 @@ export default function InvoicesPage() {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["/api/invoices"] }); },
   });
 
+  const updateNumberMutation = useMutation({
+    mutationFn: ({ id, newNumber, resolution }: { id: number; newNumber: string; resolution?: "temp" | "next" }) =>
+      api.patch(`/api/invoices/${id}/number`, { newNumber, resolution }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/invoices"] });
+      setEditingNumberId(null);
+      setEditingNumberValue("");
+      setConflictDialog(null);
+    },
+    onError: (err: any) => {
+      const errorData = err.data;
+      if (errorData?.error === "duplicate") {
+        setConflictDialog({
+          invoiceId: editingNumberId!,
+          newNumber: editingNumberValue,
+          existingId: errorData.existingId,
+        });
+      } else {
+        alert("Fehler: " + (errorData?.message ?? err.message ?? "Unbekannter Fehler"));
+      }
+    },
+  });
+
+  function startEditNumber(inv: any) {
+    setEditingNumberId(inv.id);
+    setEditingNumberValue(inv.invoiceNumber);
+  }
+
+  function cancelEditNumber() {
+    setEditingNumberId(null);
+    setEditingNumberValue("");
+  }
+
+  function saveNumber(id: number) {
+    if (!editingNumberValue.trim()) {
+      alert("Nummer darf nicht leer sein");
+      return;
+    }
+    updateNumberMutation.mutate({ id, newNumber: editingNumberValue.trim() });
+  }
+
+  function resolveConflict(resolution: "temp" | "next") {
+    if (!conflictDialog) return;
+    updateNumberMutation.mutate({
+      id: conflictDialog.invoiceId,
+      newNumber: conflictDialog.newNumber,
+      resolution,
+    });
+  }
+
   function openEdit(inv: any) { setEditing(inv); setEditingId(inv.id); setView("form"); }
 
   function openEmail(inv: any) {
@@ -122,6 +175,44 @@ export default function InvoicesPage() {
 
   return (
     <>
+      {conflictDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Rechnungsnummer bereits vergeben</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              Die Nummer <span className="font-mono font-bold">{conflictDialog.newNumber}</span> ist bereits einer anderen Rechnung zugewiesen.
+              <br />
+              Wie soll mit der alten Nummer verfahren werden?
+            </p>
+            <div className="space-y-3 mb-6">
+              <button
+                onClick={() => resolveConflict("temp")}
+                disabled={updateNumberMutation.isPending}
+                className="w-full bg-blue-600 text-white py-2.5 px-4 rounded-lg text-sm font-semibold hover:bg-blue-700 disabled:opacity-50"
+              >
+                Temporäre Nummer vergeben
+                <div className="text-xs opacity-90 mt-0.5">Die alte Rechnung erhält eine temporäre Nummer (z.B. RNG26-003-TEMP-...)</div>
+              </button>
+              <button
+                onClick={() => resolveConflict("next")}
+                disabled={updateNumberMutation.isPending}
+                className="w-full bg-green-600 text-white py-2.5 px-4 rounded-lg text-sm font-semibold hover:bg-green-700 disabled:opacity-50"
+              >
+                Nächste Nummer vergeben
+                <div className="text-xs opacity-90 mt-0.5">Die alte Rechnung erhält automatisch die nächste verfügbare Nummer</div>
+              </button>
+            </div>
+            <button
+              onClick={() => { setConflictDialog(null); setEditingNumberId(null); setEditingNumberValue(""); }}
+              disabled={updateNumberMutation.isPending}
+              className="w-full bg-gray-200 text-gray-700 py-2 px-4 rounded-lg text-sm font-semibold hover:bg-gray-300 disabled:opacity-50"
+            >
+              Abbrechen
+            </button>
+          </div>
+        </div>
+      )}
+
       {emailTarget && (
         <EmailDialog
           open={emailDialogOpen}
@@ -184,7 +275,43 @@ export default function InvoicesPage() {
                 {filtered.map((inv) => (
                   <tr key={inv.id} className="hover:bg-gray-50">
                     <td className="px-5 py-3">
-                      <div className="font-mono text-xs text-gray-700">{inv.invoiceNumber}</div>
+                      {editingNumberId === inv.id ? (
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={editingNumberValue}
+                            onChange={(e) => setEditingNumberValue(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") saveNumber(inv.id);
+                              if (e.key === "Escape") cancelEditNumber();
+                            }}
+                            className="font-mono text-xs border border-blue-500 rounded px-2 py-1 w-32 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            autoFocus
+                          />
+                          <button
+                            onClick={() => saveNumber(inv.id)}
+                            disabled={updateNumberMutation.isPending}
+                            className="text-xs text-green-600 hover:underline disabled:opacity-50"
+                          >
+                            ✓
+                          </button>
+                          <button
+                            onClick={cancelEditNumber}
+                            disabled={updateNumberMutation.isPending}
+                            className="text-xs text-red-600 hover:underline disabled:opacity-50"
+                          >
+                            ✗
+                          </button>
+                        </div>
+                      ) : (
+                        <div 
+                          className="font-mono text-xs text-gray-700 cursor-pointer hover:text-blue-600 hover:underline"
+                          onClick={() => startEditNumber(inv)}
+                          title="Klicken zum Bearbeiten"
+                        >
+                          {inv.invoiceNumber}
+                        </div>
+                      )}
                       <div className="mt-1 text-[10px] font-semibold text-gray-500 uppercase tracking-wide">
                         {inv.invoiceType === "down_payment" ? "Anzahlungsrechnung" : inv.invoiceType === "final" ? "Finale Rechnung" : "Standardrechnung"}
                       </div>
@@ -247,7 +374,43 @@ export default function InvoicesPage() {
                 <div key={inv.id} className="p-4 space-y-2">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <div className="font-mono text-xs font-bold text-gray-800">{inv.invoiceNumber}</div>
+                      {editingNumberId === inv.id ? (
+                        <div className="flex items-center gap-2 mb-1">
+                          <input
+                            type="text"
+                            value={editingNumberValue}
+                            onChange={(e) => setEditingNumberValue(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") saveNumber(inv.id);
+                              if (e.key === "Escape") cancelEditNumber();
+                            }}
+                            className="font-mono text-xs border border-blue-500 rounded px-2 py-1 w-32 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            autoFocus
+                          />
+                          <button
+                            onClick={() => saveNumber(inv.id)}
+                            disabled={updateNumberMutation.isPending}
+                            className="text-xs text-green-600 hover:underline disabled:opacity-50"
+                          >
+                            ✓
+                          </button>
+                          <button
+                            onClick={cancelEditNumber}
+                            disabled={updateNumberMutation.isPending}
+                            className="text-xs text-red-600 hover:underline disabled:opacity-50"
+                          >
+                            ✗
+                          </button>
+                        </div>
+                      ) : (
+                        <div 
+                          className="font-mono text-xs font-bold text-gray-800 cursor-pointer hover:text-blue-600 hover:underline"
+                          onClick={() => startEditNumber(inv)}
+                          title="Klicken zum Bearbeiten"
+                        >
+                          {inv.invoiceNumber}
+                        </div>
+                      )}
                       <div className="mt-1 text-[10px] font-semibold text-gray-500 uppercase tracking-wide">
                         {inv.invoiceType === "down_payment" ? "Anzahlungsrechnung" : inv.invoiceType === "final" ? "Finale Rechnung" : "Standardrechnung"}
                       </div>
