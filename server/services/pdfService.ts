@@ -37,7 +37,7 @@ function registerLato(doc: jsPDF) {
   }
 }
 
-const PDF_FONT = LATO_REGULAR_B64 ? "lato" : "helvetica";
+const PDF_FONT = "helvetica"; // LATO_REGULAR_B64 ? "lato" : "helvetica";
 
 // --- Env-based company config -------------------------------------------------
 function company() {
@@ -279,6 +279,36 @@ const TIGHT_QUOTE_LAYOUT: QuoteLayout = {
 };
 
 // --- Helpers ------------------------------------------------------------------
+
+function decodeHtmlEntities(text: string): string {
+  const entities: Record<string, string> = {
+    '&nbsp;': ' ',
+    '&amp;': '&',
+    '&lt;': '<',
+    '&gt;': '>',
+    '&quot;': '"',
+    '&#39;': "'",
+    '&apos;': "'",
+    '&ndash;': '–',
+    '&mdash;': '—',
+    '&hellip;': '…',
+    '&euro;': '€',
+    '&copy;': '©',
+    '&reg;': '®',
+    '&trade;': '™',
+  };
+  
+  let decoded = text;
+  for (const [entity, char] of Object.entries(entities)) {
+    decoded = decoded.replaceAll(entity, char);
+  }
+  
+  // Decode numeric entities like &#160; or &#xA0;
+  decoded = decoded.replace(/&#(\d+);/g, (match, dec) => String.fromCharCode(parseInt(dec, 10)));
+  decoded = decoded.replace(/&#x([0-9A-Fa-f]+);/g, (match, hex) => String.fromCharCode(parseInt(hex, 16)));
+  
+  return decoded;
+}
 
 function formatCurrencyEur(value: number | string): string {
   const n   = typeof value === "string" ? parseFloat(value) : value;
@@ -739,7 +769,7 @@ function getItemTableParts(doc: jsPDF, item: any, textMaxWidth: number) {
   const total = parseFloat(item.total ?? 0);
   const lines = String(item.description ?? "")
     .split(/\r?\n/)
-    .map((line) => line.trim())
+    .map((line) => decodeHtmlEntities(line.trim()))
     .filter(Boolean);
 
   const firstLine = lines[0] ?? "";
@@ -749,10 +779,10 @@ function getItemTableParts(doc: jsPDF, item: any, textMaxWidth: number) {
   const detailLines = firstLineIsArticleNumber
     ? [firstLine, ...lines.slice(2)]
     : lines.slice(1);
-  const manufacturer = String(item.manufacturer ?? "").trim();
+  const manufacturer = decodeHtmlEntities(String(item.manufacturer ?? "").trim());
   const manufacturerLabel = manufacturer ? `AC-${manufacturer}` : "";
-  const productInfoText = String(item.productInfoText ?? "").trim();
-  const productDescription = String(item.productDescription ?? "").trim();
+  const productInfoText = decodeHtmlEntities(String(item.productInfoText ?? "").trim());
+  const productDescription = decodeHtmlEntities(String(item.productDescription ?? "").trim());
   const productDescLines = productDescription
     ? productDescription
         .split(/\r?\n/)
